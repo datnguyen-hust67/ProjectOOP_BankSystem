@@ -1,0 +1,16 @@
+# Bỏ qua thư mục môi trường ảo
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Bỏ qua file cấu hình biến môi trường (CHỨA MẬT KHẨU)
+.env
+
+# Bỏ qua file cấu hình IDE
+.vscode/
+.idea/
+
+# Bỏ qua các file log hoặc database tạm
+*.log
+*.sqlite3
