@@ -41,10 +41,10 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT SystemID, SystemName, SystemType, APIEndpoint, APIKey,
-                   Status, Description, LastChecked, CreatedAt, UpdatedAt
-            FROM ExternalSystems
-            ORDER BY SystemName
+            SELECT MaHeThong, TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI,
+                   TrangThai, MoTa, KiemTraCuoi, NgayTao, NgayCapNhat
+            FROM HeThongNgoai
+            ORDER BY TenHeThong
         """
         
         cursor.execute(query)
@@ -59,10 +59,10 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT SystemID, SystemName, SystemType, APIEndpoint, APIKey,
-                   Status, Description, LastChecked, CreatedAt, UpdatedAt
-            FROM ExternalSystems
-            WHERE SystemID = ?
+            SELECT MaHeThong, TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI,
+                   TrangThai, MoTa, KiemTraCuoi, NgayTao, NgayCapNhat
+            FROM HeThongNgoai
+            WHERE MaHeThong = ?
         """
         
         cursor.execute(query, (system_id,))
@@ -78,11 +78,11 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT SystemID, SystemName, SystemType, APIEndpoint, APIKey,
-                   Status, Description, LastChecked, CreatedAt, UpdatedAt
-            FROM ExternalSystems
-            WHERE SystemType = ?
-            ORDER BY SystemName
+            SELECT MaHeThong, TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI,
+                   TrangThai, MoTa, KiemTraCuoi, NgayTao, NgayCapNhat
+            FROM HeThongNgoai
+            WHERE LoaiHeThong = ?
+            ORDER BY TenHeThong
         """
         
         cursor.execute(query, (system_type,))
@@ -97,11 +97,11 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT SystemID, SystemName, SystemType, APIEndpoint, APIKey,
-                   Status, Description, LastChecked, CreatedAt, UpdatedAt
-            FROM ExternalSystems
-            WHERE Status = 'Active'
-            ORDER BY SystemName
+            SELECT MaHeThong, TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI,
+                   TrangThai, MoTa, KiemTraCuoi, NgayTao, NgayCapNhat
+            FROM HeThongNgoai
+            WHERE TrangThai = N'KichHoat'
+            ORDER BY TenHeThong
         """
         
         cursor.execute(query)
@@ -123,10 +123,10 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         query = """
-            INSERT INTO ExternalSystems (
-                SystemName, SystemType, APIEndpoint, APIKey, Description, Status
+            INSERT INTO HeThongNgoai (
+                TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI, MoTa, TrangThai
             )
-            VALUES (?, ?, ?, ?, ?, 'Active')
+            VALUES (?, ?, ?, ?, ?, N'KichHoat')
         """
         
         try:
@@ -161,31 +161,31 @@ class ExternalSystemRepository:
         params = []
         
         if system_name is not None:
-            updates.append("SystemName = ?")
+            updates.append("TenHeThong = ?")
             params.append(system_name)
         if system_type is not None:
-            updates.append("SystemType = ?")
+            updates.append("LoaiHeThong = ?")
             params.append(system_type)
         if api_endpoint is not None:
-            updates.append("APIEndpoint = ?")
+            updates.append("DiaChiAPI = ?")
             params.append(api_endpoint)
         if api_key is not None:
-            updates.append("APIKey = ?")
+            updates.append("KhoaAPI = ?")
             params.append(api_key)
         if status is not None:
-            updates.append("Status = ?")
+            updates.append("TrangThai = ?")
             params.append(status)
         if description is not None:
-            updates.append("Description = ?")
+            updates.append("MoTa = ?")
             params.append(description)
         
         if not updates:
             return False
         
-        updates.append("UpdatedAt = GETDATE()")
+        updates.append("NgayCapNhat = GETDATE()")
         params.append(system_id)
         
-        query = f"UPDATE ExternalSystems SET {', '.join(updates)} WHERE SystemID = ?"
+        query = f"UPDATE HeThongNgoai SET {', '.join(updates)} WHERE MaHeThong = ?"
         
         try:
             cursor.execute(query, params)
@@ -203,7 +203,7 @@ class ExternalSystemRepository:
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        query = "UPDATE ExternalSystems SET LastChecked = GETDATE() WHERE SystemID = ?"
+        query = "UPDATE HeThongNgoai SET KiemTraCuoi = GETDATE() WHERE MaHeThong = ?"
         
         try:
             cursor.execute(query, (system_id,))
@@ -221,7 +221,7 @@ class ExternalSystemRepository:
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        query = "DELETE FROM ExternalSystems WHERE SystemID = ?"
+        query = "DELETE FROM HeThongNgoai WHERE MaHeThong = ?"
         
         try:
             cursor.execute(query, (system_id,))
@@ -240,10 +240,10 @@ class ExternalSystemRepository:
         cursor = conn.cursor()
         
         if system_type:
-            query = "SELECT COUNT(*) FROM ExternalSystems WHERE SystemType = ?"
+            query = "SELECT COUNT(*) FROM HeThongNgoai WHERE LoaiHeThong = ?"
             cursor.execute(query, (system_type,))
         else:
-            query = "SELECT COUNT(*) FROM ExternalSystems"
+            query = "SELECT COUNT(*) FROM HeThongNgoai"
             cursor.execute(query)
         
         count = cursor.fetchone()[0]

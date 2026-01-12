@@ -1,9 +1,9 @@
 -- ================================================
--- BANK MANAGEMENT SYSTEM - DATABASE SCHEMA
+-- HỆ THỐNG QUẢN LÝ NGÂN HÀNG - SCHEMA CƠ SỞ DỮ LIỆU
 -- Database: BankSystemOOP
 -- ================================================
 
--- Drop database if exists and create new
+-- Xóa database nếu tồn tại và tạo mới
 IF EXISTS (SELECT name FROM sys.databases WHERE name = 'BankSystemOOP')
 BEGIN
     ALTER DATABASE BankSystemOOP SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
@@ -17,355 +17,355 @@ GO
 USE BankSystemOOP;
 GO
 
-PRINT '🏦 Creating BankSystemOOP Database Schema...';
+PRINT '🏦 Đang tạo Schema Database BankSystemOOP...';
 GO
 
 -- ================================================
--- TABLE 1: Roles (Vai trò)
+-- BẢNG 1: VaiTro (Roles)
 -- ================================================
-CREATE TABLE Roles (
-    RoleID INT PRIMARY KEY IDENTITY(1,1),
-    RoleName NVARCHAR(50) NOT NULL UNIQUE,
-    Description NVARCHAR(255),
-    CreatedAt DATETIME DEFAULT GETDATE(),
+CREATE TABLE VaiTro (
+    MaVaiTro INT PRIMARY KEY IDENTITY(1,1),
+    TenVaiTro NVARCHAR(50) NOT NULL UNIQUE,
+    MoTa NVARCHAR(255),
+    NgayTao DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT CK_Roles_RoleName CHECK (RoleName IN (N'Admin', N'Manager', N'CreditOfficer', N'Customer'))
+    CONSTRAINT CK_VaiTro_TenVaiTro CHECK (TenVaiTro IN (N'Admin', N'QuanLy', N'NhanVienTinDung', N'KhachHang'))
 );
 
 -- ================================================
--- TABLE 2: Users (Người dùng)
+-- BẢNG 2: NguoiDung (Users)
 -- ================================================
-CREATE TABLE Users (
-    UserID INT PRIMARY KEY IDENTITY(1,1),
-    Username NVARCHAR(50) NOT NULL UNIQUE,
-    PasswordPlainText NVARCHAR(100) NOT NULL, -- Plain text for easy testing
-    RoleID INT NOT NULL,
-    IsActive BIT DEFAULT 1,
-    LastLogin DATETIME,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
+CREATE TABLE NguoiDung (
+    MaNguoiDung INT PRIMARY KEY IDENTITY(1,1),
+    TenDangNhap NVARCHAR(50) NOT NULL UNIQUE,
+    MatKhau NVARCHAR(100) NOT NULL,
+    MaVaiTro INT NOT NULL,
+    KichHoat BIT DEFAULT 1,
+    DangNhapCuoi DATETIME,
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_Users_Roles FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
+    CONSTRAINT FK_NguoiDung_VaiTro FOREIGN KEY (MaVaiTro) REFERENCES VaiTro(MaVaiTro)
 );
 
 -- ================================================
--- TABLE 3: Employees (Nhân viên)
+-- BẢNG 3: NhanVien (Employees)
 -- ================================================
-CREATE TABLE Employees (
-    EmployeeID INT PRIMARY KEY IDENTITY(1,1),
-    UserID INT NOT NULL UNIQUE,
-    FullName NVARCHAR(100) NOT NULL,
-    DateOfBirth DATE,
-    Phone NVARCHAR(15),
+CREATE TABLE NhanVien (
+    MaNhanVien INT PRIMARY KEY IDENTITY(1,1),
+    MaNguoiDung INT NOT NULL UNIQUE,
+    HoTen NVARCHAR(100) NOT NULL,
+    NgaySinh DATE,
+    SoDienThoai NVARCHAR(15),
     Email NVARCHAR(100),
-    Department NVARCHAR(100), -- Phòng ban
-    Position NVARCHAR(100), -- Chức vụ
-    Salary DECIMAL(18,2), -- Mức lương
-    HireDate DATE DEFAULT CAST(GETDATE() AS DATE),
-    ManagerID INT, -- Quản lý trực tiếp
-    Status NVARCHAR(20) DEFAULT N'Active' CHECK (Status IN (N'Active', N'Inactive', N'Locked')),
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
-    DeletedAt DATETIME NULL,
+    PhongBan NVARCHAR(100),
+    ChucVu NVARCHAR(100),
+    MucLuong DECIMAL(18,2),
+    NgayVaoLam DATE DEFAULT CAST(GETDATE() AS DATE),
+    MaQuanLy INT,
+    TrangThai NVARCHAR(20) DEFAULT N'KichHoat' CHECK (TrangThai IN (N'KichHoat', N'KhongKichHoat', N'BiKhoa')),
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE(),
+    NgayXoa DATETIME NULL,
     
-    -- Additional fields
-    Address NVARCHAR(255),
-    IdentityNumber NVARCHAR(20),
-    Hometown NVARCHAR(100),
+    -- Thông tin bổ sung
+    DiaChi NVARCHAR(255),
+    SoCMND NVARCHAR(20),
+    QueQuan NVARCHAR(100),
     
-    CONSTRAINT FK_Employees_Users FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    CONSTRAINT FK_Employees_Manager FOREIGN KEY (ManagerID) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_NhanVien_NguoiDung FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
+    CONSTRAINT FK_NhanVien_QuanLy FOREIGN KEY (MaQuanLy) REFERENCES NhanVien(MaNhanVien)
 );
 
 -- ================================================
--- TABLE 4: Customers (Khách hàng)
+-- BẢNG 4: KhachHang (Customers)
 -- ================================================
-CREATE TABLE Customers (
-    CustomerID INT PRIMARY KEY IDENTITY(1,1),
-    FullName NVARCHAR(100) NOT NULL,
-    DateOfBirth DATE,
-    Phone NVARCHAR(15) UNIQUE,
+CREATE TABLE KhachHang (
+    MaKhachHang INT PRIMARY KEY IDENTITY(1,1),
+    HoTen NVARCHAR(100) NOT NULL,
+    NgaySinh DATE,
+    SoDienThoai NVARCHAR(15) UNIQUE,
     Email NVARCHAR(100) UNIQUE,
-    Address NVARCHAR(255),
-    IdentityNumber NVARCHAR(20) UNIQUE, -- CCCD/CMND
-    CreditScore INT DEFAULT 0, -- Điểm tín dụng
-    Gender NVARCHAR(10),
-    Status NVARCHAR(20) DEFAULT N'Active',
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE()
+    DiaChi NVARCHAR(255),
+    SoCMND NVARCHAR(20) UNIQUE,
+    DiemTinDung INT DEFAULT 0,
+    GioiTinh NVARCHAR(10),
+    TrangThai NVARCHAR(20) DEFAULT N'KichHoat',
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE()
 );
 
 -- ================================================
--- TABLE 5: LoanProducts (Sản phẩm vay)
+-- BẢNG 5: SanPhamVay (LoanProducts)
 -- ================================================
-CREATE TABLE LoanProducts (
-    ProductID INT PRIMARY KEY IDENTITY(1,1),
-    ProductName NVARCHAR(100) NOT NULL,
-    ProductType NVARCHAR(50), -- Loại vay: Cá nhân, Doanh nghiệp, Thế chấp
-    MinAmount DECIMAL(18,2),
-    MaxAmount DECIMAL(18,2),
-    MinTerm INT, -- Kỳ hạn tối thiểu (tháng)
-    MaxTerm INT, -- Kỳ hạn tối đa (tháng)
-    InterestRateMin DECIMAL(5,2), -- Lãi suất tối thiểu %
-    InterestRateMax DECIMAL(5,2), -- Lãi suất tối đa %
-    RequireCollateral BIT DEFAULT 0, -- Yêu cầu tài sản đảm bảo
-    Description NVARCHAR(500),
-    IsActive BIT DEFAULT 1,
-    CreatedAt DATETIME DEFAULT GETDATE()
+CREATE TABLE SanPhamVay (
+    MaSanPham INT PRIMARY KEY IDENTITY(1,1),
+    TenSanPham NVARCHAR(100) NOT NULL,
+    LoaiSanPham NVARCHAR(50),
+    SoTienToiThieu DECIMAL(18,2),
+    SoTienToiDa DECIMAL(18,2),
+    KyHanToiThieu INT,
+    KyHanToiDa INT,
+    LaiSuatToiThieu DECIMAL(5,2),
+    LaiSuatToiDa DECIMAL(5,2),
+    YeuCauTaiSan BIT DEFAULT 0,
+    MoTa NVARCHAR(500),
+    KichHoat BIT DEFAULT 1,
+    NgayTao DATETIME DEFAULT GETDATE()
 );
 
 -- ================================================
--- TABLE 6: CreditApplications (Hồ sơ vay)
+-- BẢNG 6: HoSoVay (CreditApplications)
 -- ================================================
-CREATE TABLE CreditApplications (
-    ApplicationID INT PRIMARY KEY IDENTITY(1,1),
-    ApplicationNumber NVARCHAR(50) UNIQUE NOT NULL, -- Mã hồ sơ
-    CustomerID INT NOT NULL,
-    ProductID INT NOT NULL,
+CREATE TABLE HoSoVay (
+    MaHoSo INT PRIMARY KEY IDENTITY(1,1),
+    SoHoSo NVARCHAR(50) UNIQUE NOT NULL,
+    MaKhachHang INT NOT NULL,
+    MaSanPham INT NOT NULL,
     
     -- Thông tin khoản vay
-    RequestedAmount DECIMAL(18,2) NOT NULL,
-    RequestedTerm INT NOT NULL, -- Kỳ hạn (tháng)
-    Purpose NVARCHAR(255), -- Mục đích vay
+    SoTienYeuCau DECIMAL(18,2) NOT NULL,
+    KyHanYeuCau INT NOT NULL,
+    MucDich NVARCHAR(255),
     
     -- Trạng thái
-    Status NVARCHAR(50) DEFAULT N'Pending' CHECK (Status IN (
-        N'Pending',        -- Chờ thẩm định
-        N'UnderReview',    -- Đang thẩm định
-        N'Approved',       -- Đã duyệt
-        N'Rejected',       -- Từ chối
-        N'Disbursed',      -- Đã giải ngân
-        N'Completed',      -- Hoàn thành
-        N'Cancelled'       -- Hủy bỏ
+    TrangThai NVARCHAR(50) DEFAULT N'ChoXuLy' CHECK (TrangThai IN (
+        N'ChoXuLy',        -- Pending
+        N'DangThamDinh',   -- UnderReview
+        N'DaDuyet',        -- Approved
+        N'TuChoi',         -- Rejected
+        N'DaGiaiNgan',     -- Disbursed
+        N'HoanThanh',      -- Completed
+        N'DaHuy'           -- Cancelled
     )),
     
     -- Người xử lý
-    AssignedOfficerID INT, -- Nhân viên được giao
-    ReviewedBy INT, -- Người thẩm định
-    ApprovedBy INT, -- Người phê duyệt
+    MaNhanVienPhuTrach INT,
+    NguoiThamDinh INT,
+    NguoiPheDuyet INT,
     
     -- Ngày tháng
-    ApplicationDate DATETIME DEFAULT GETDATE(),
-    ReviewDate DATETIME,
-    ApprovalDate DATETIME,
-    DisbursementDate DATETIME,
+    NgayNop DATETIME DEFAULT GETDATE(),
+    NgayThamDinh DATETIME,
+    NgayPheDuyet DATETIME,
+    NgayGiaiNgan DATETIME,
     
     -- Ghi chú
-    Notes NVARCHAR(500),
-    RejectionReason NVARCHAR(500),
+    GhiChu NVARCHAR(500),
+    LyDoTuChoi NVARCHAR(500),
     
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_CreditApp_Customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
-    CONSTRAINT FK_CreditApp_Product FOREIGN KEY (ProductID) REFERENCES LoanProducts(ProductID),
-    CONSTRAINT FK_CreditApp_Officer FOREIGN KEY (AssignedOfficerID) REFERENCES Employees(EmployeeID),
-    CONSTRAINT FK_CreditApp_Reviewer FOREIGN KEY (ReviewedBy) REFERENCES Employees(EmployeeID),
-    CONSTRAINT FK_CreditApp_Approver FOREIGN KEY (ApprovedBy) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_HoSo_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang),
+    CONSTRAINT FK_HoSo_SanPham FOREIGN KEY (MaSanPham) REFERENCES SanPhamVay(MaSanPham),
+    CONSTRAINT FK_HoSo_NhanVien FOREIGN KEY (MaNhanVienPhuTrach) REFERENCES NhanVien(MaNhanVien),
+    CONSTRAINT FK_HoSo_NguoiThamDinh FOREIGN KEY (NguoiThamDinh) REFERENCES NhanVien(MaNhanVien),
+    CONSTRAINT FK_HoSo_NguoiPheDuyet FOREIGN KEY (NguoiPheDuyet) REFERENCES NhanVien(MaNhanVien)
 );
 
 -- ================================================
--- TABLE 7: CreditAssessment (Thẩm định tín dụng)
+-- BẢNG 7: ThamDinhTinDung (CreditAssessment)
 -- ================================================
-CREATE TABLE CreditAssessment (
-    AssessmentID INT PRIMARY KEY IDENTITY(1,1),
-    ApplicationID INT NOT NULL UNIQUE,
+CREATE TABLE ThamDinhTinDung (
+    MaThamDinh INT PRIMARY KEY IDENTITY(1,1),
+    MaHoSo INT NOT NULL UNIQUE,
     
     -- Thông tin CIC
-    CICScore INT, -- Điểm CIC
-    CICStatus NVARCHAR(50), -- Kết quả tra cứu CIC
-    CICCheckDate DATETIME,
+    DiemCIC INT,
+    TrangThaiCIC NVARCHAR(50),
+    NgayKiemTraCIC DATETIME,
     
     -- Thẩm định thu nhập
-    MonthlyIncome DECIMAL(18,2),
-    OtherIncome DECIMAL(18,2),
-    MonthlyExpenses DECIMAL(18,2),
-    DebtToIncomeRatio DECIMAL(5,2), -- Tỷ lệ nợ/thu nhập
+    ThuNhapHangThang DECIMAL(18,2),
+    ThuNhapKhac DECIMAL(18,2),
+    ChiPhiHangThang DECIMAL(18,2),
+    TyLeNoTrenThuNhap DECIMAL(5,2),
     
     -- Thẩm định tài sản
-    CollateralType NVARCHAR(100), -- Loại tài sản đảm bảo
-    CollateralValue DECIMAL(18,2), -- Giá trị tài sản
-    LoanToValueRatio DECIMAL(5,2), -- Tỷ lệ cho vay/giá trị tài sản
+    LoaiTaiSan NVARCHAR(100),
+    GiaTriTaiSan DECIMAL(18,2),
+    TyLeVayTrenGiaTri DECIMAL(5,2),
     
     -- Kết quả thẩm định
-    RiskLevel NVARCHAR(20) CHECK (RiskLevel IN (N'Low', N'Medium', N'High', N'VeryHigh')),
-    RecommendedAmount DECIMAL(18,2),
-    RecommendedInterestRate DECIMAL(5,2),
-    AssessmentNotes NVARCHAR(1000),
+    MucDoRuiRo NVARCHAR(20) CHECK (MucDoRuiRo IN (N'Thap', N'TrungBinh', N'Cao', N'RatCao')),
+    SoTienDeXuat DECIMAL(18,2),
+    LaiSuatDeXuat DECIMAL(5,2),
+    GhiChuThamDinh NVARCHAR(1000),
     
-    AssessedBy INT,
-    AssessmentDate DATETIME DEFAULT GETDATE(),
+    NguoiThamDinh INT,
+    NgayThamDinh DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_Assessment_Application FOREIGN KEY (ApplicationID) REFERENCES CreditApplications(ApplicationID),
-    CONSTRAINT FK_Assessment_Officer FOREIGN KEY (AssessedBy) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_ThamDinh_HoSo FOREIGN KEY (MaHoSo) REFERENCES HoSoVay(MaHoSo),
+    CONSTRAINT FK_ThamDinh_NhanVien FOREIGN KEY (NguoiThamDinh) REFERENCES NhanVien(MaNhanVien)
 );
 
 -- ================================================
--- TABLE 8: Loans (Khoản vay đã giải ngân)
+-- BẢNG 8: KhoanVay (Loans)
 -- ================================================
-CREATE TABLE Loans (
-    LoanID INT PRIMARY KEY IDENTITY(1,1),
-    LoanNumber NVARCHAR(50) UNIQUE NOT NULL,
-    ApplicationID INT NOT NULL UNIQUE,
-    CustomerID INT NOT NULL,
+CREATE TABLE KhoanVay (
+    MaKhoanVay INT PRIMARY KEY IDENTITY(1,1),
+    SoKhoanVay NVARCHAR(50) UNIQUE NOT NULL,
+    MaHoSo INT NOT NULL UNIQUE,
+    MaKhachHang INT NOT NULL,
     
     -- Thông tin khoản vay
-    PrincipalAmount DECIMAL(18,2) NOT NULL, -- Số tiền gốc
-    InterestRate DECIMAL(5,2) NOT NULL,
-    LoanTerm INT NOT NULL, -- Kỳ hạn (tháng)
-    MonthlyPayment DECIMAL(18,2), -- Trả hàng tháng
+    SoTienGoc DECIMAL(18,2) NOT NULL,
+    LaiSuat DECIMAL(5,2) NOT NULL,
+    KyHan INT NOT NULL,
+    TraHangThang DECIMAL(18,2),
     
     -- Số dư
-    OutstandingBalance DECIMAL(18,2), -- Dư nợ gốc
-    OutstandingInterest DECIMAL(18,2) DEFAULT 0, -- Lãi phải trả
+    DuNoGoc DECIMAL(18,2),
+    LaiPhaiTra DECIMAL(18,2) DEFAULT 0,
     
     -- Trạng thái
-    Status NVARCHAR(50) DEFAULT N'Active' CHECK (Status IN (
-        N'Active',      -- Đang hoạt động
-        N'Overdue',     -- Quá hạn
-        N'PaidOff',     -- Đã tất toán
-        N'WrittenOff'   -- Xóa nợ
+    TrangThai NVARCHAR(50) DEFAULT N'DangHoatDong' CHECK (TrangThai IN (
+        N'DangHoatDong',   -- Active
+        N'QuaHan',         -- Overdue
+        N'DaTatToan',      -- PaidOff
+        N'XoaNo'           -- WrittenOff
     )),
     
     -- Ngày tháng
-    DisbursementDate DATE NOT NULL,
-    FirstPaymentDate DATE,
-    MaturityDate DATE, -- Ngày đến hạn
+    NgayGiaiNgan DATE NOT NULL,
+    NgayTraDauTien DATE,
+    NgayDaoHan DATE,
     
     -- Giải ngân
-    DisbursedBy INT,
-    DisbursementMethod NVARCHAR(50), -- Phương thức giải ngân
+    NguoiGiaiNgan INT,
+    PhuongThucGiaiNgan NVARCHAR(50),
     
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE(),
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_Loans_Application FOREIGN KEY (ApplicationID) REFERENCES CreditApplications(ApplicationID),
-    CONSTRAINT FK_Loans_Customer FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
-    CONSTRAINT FK_Loans_Officer FOREIGN KEY (DisbursedBy) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_KhoanVay_HoSo FOREIGN KEY (MaHoSo) REFERENCES HoSoVay(MaHoSo),
+    CONSTRAINT FK_KhoanVay_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang),
+    CONSTRAINT FK_KhoanVay_NhanVien FOREIGN KEY (NguoiGiaiNgan) REFERENCES NhanVien(MaNhanVien)
 );
 
 -- ================================================
--- TABLE 9: PaymentSchedule (Lịch trả nợ)
+-- BẢNG 9: LichTraNo (PaymentSchedule)
 -- ================================================
-CREATE TABLE PaymentSchedule (
-    ScheduleID INT PRIMARY KEY IDENTITY(1,1),
-    LoanID INT NOT NULL,
-    InstallmentNumber INT NOT NULL, -- Kỳ trả thứ
+CREATE TABLE LichTraNo (
+    MaLichTra INT PRIMARY KEY IDENTITY(1,1),
+    MaKhoanVay INT NOT NULL,
+    SoKyTra INT NOT NULL,
     
     -- Số tiền
-    PrincipalAmount DECIMAL(18,2), -- Gốc
-    InterestAmount DECIMAL(18,2), -- Lãi
-    TotalAmount DECIMAL(18,2), -- Tổng
+    TienGoc DECIMAL(18,2),
+    TienLai DECIMAL(18,2),
+    TongTien DECIMAL(18,2),
     
     -- Ngày
-    DueDate DATE NOT NULL, -- Ngày đến hạn
-    PaidDate DATE, -- Ngày thực trả
+    NgayDenHan DATE NOT NULL,
+    NgayThucTra DATE,
     
     -- Trạng thái
-    Status NVARCHAR(20) DEFAULT N'Pending' CHECK (Status IN (
-        N'Pending',  -- Chưa đến hạn
-        N'Paid',     -- Đã trả
-        N'Overdue',  -- Quá hạn
-        N'Partial'   -- Trả một phần
+    TrangThai NVARCHAR(20) DEFAULT N'ChuaDenHan' CHECK (TrangThai IN (
+        N'ChuaDenHan',  -- Pending
+        N'DaTra',       -- Paid
+        N'QuaHan',      -- Overdue
+        N'TraMotPhan'   -- Partial
     )),
     
-    PaidAmount DECIMAL(18,2) DEFAULT 0,
+    SoTienDaTra DECIMAL(18,2) DEFAULT 0,
     
-    CreatedAt DATETIME DEFAULT GETDATE(),
+    NgayTao DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_Schedule_Loan FOREIGN KEY (LoanID) REFERENCES Loans(LoanID)
+    CONSTRAINT FK_LichTra_KhoanVay FOREIGN KEY (MaKhoanVay) REFERENCES KhoanVay(MaKhoanVay)
 );
 
 -- ================================================
--- TABLE 10: Payments (Giao dịch thanh toán)
+-- BẢNG 10: ThanhToan (Payments)
 -- ================================================
-CREATE TABLE Payments (
-    PaymentID INT PRIMARY KEY IDENTITY(1,1),
-    LoanID INT NOT NULL,
-    ScheduleID INT,
+CREATE TABLE ThanhToan (
+    MaThanhToan INT PRIMARY KEY IDENTITY(1,1),
+    MaKhoanVay INT NOT NULL,
+    MaLichTra INT,
     
-    PaymentAmount DECIMAL(18,2) NOT NULL,
-    PaymentDate DATETIME DEFAULT GETDATE(),
-    PaymentMethod NVARCHAR(50), -- Phương thức thanh toán
+    SoTienThanhToan DECIMAL(18,2) NOT NULL,
+    NgayThanhToan DATETIME DEFAULT GETDATE(),
+    PhuongThucThanhToan NVARCHAR(50),
     
-    PrincipalPaid DECIMAL(18,2) DEFAULT 0,
-    InterestPaid DECIMAL(18,2) DEFAULT 0,
-    PenaltyPaid DECIMAL(18,2) DEFAULT 0, -- Phí phạt (nếu có)
+    GocDaTra DECIMAL(18,2) DEFAULT 0,
+    LaiDaTra DECIMAL(18,2) DEFAULT 0,
+    PhiPhat DECIMAL(18,2) DEFAULT 0,
     
-    TransactionReference NVARCHAR(100), -- Mã giao dịch
-    Notes NVARCHAR(255),
+    MaGiaoDich NVARCHAR(100),
+    GhiChu NVARCHAR(255),
     
-    RecordedBy INT, -- Người ghi nhận
-    CreatedAt DATETIME DEFAULT GETDATE(),
+    NguoiGhiNhan INT,
+    NgayTao DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_Payments_Loan FOREIGN KEY (LoanID) REFERENCES Loans(LoanID),
-    CONSTRAINT FK_Payments_Schedule FOREIGN KEY (ScheduleID) REFERENCES PaymentSchedule(ScheduleID),
-    CONSTRAINT FK_Payments_Officer FOREIGN KEY (RecordedBy) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_ThanhToan_KhoanVay FOREIGN KEY (MaKhoanVay) REFERENCES KhoanVay(MaKhoanVay),
+    CONSTRAINT FK_ThanhToan_LichTra FOREIGN KEY (MaLichTra) REFERENCES LichTraNo(MaLichTra),
+    CONSTRAINT FK_ThanhToan_NhanVien FOREIGN KEY (NguoiGhiNhan) REFERENCES NhanVien(MaNhanVien)
 );
 
 -- ================================================
--- TABLE 11: ExternalSystems (Hệ thống bên ngoài)
+-- BẢNG 11: HeThongNgoai (ExternalSystems)
 -- ================================================
-CREATE TABLE ExternalSystems (
-    SystemID INT PRIMARY KEY IDENTITY(1,1),
-    SystemName NVARCHAR(100) NOT NULL,
-    SystemType NVARCHAR(50) CHECK (SystemType IN ('Payment', 'CreditCheck', 'ExchangeRate', 'Other')),
-    APIEndpoint NVARCHAR(255),
-    APIKey NVARCHAR(255),
-    Status NVARCHAR(20) DEFAULT N'Active' CHECK (Status IN (N'Active', N'Inactive', N'Maintenance')),
-    Description NVARCHAR(500),
-    LastChecked DATETIME,
-    CreatedAt DATETIME DEFAULT GETDATE(),
-    UpdatedAt DATETIME DEFAULT GETDATE()
+CREATE TABLE HeThongNgoai (
+    MaHeThong INT PRIMARY KEY IDENTITY(1,1),
+    TenHeThong NVARCHAR(100) NOT NULL,
+    LoaiHeThong NVARCHAR(50) CHECK (LoaiHeThong IN ('ThanhToan', 'KiemTraTinDung', 'TyGia', 'Khac')),
+    DiaChiAPI NVARCHAR(255),
+    KhoaAPI NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'KichHoat' CHECK (TrangThai IN (N'KichHoat', N'KhongKichHoat', N'BaoTri')),
+    MoTa NVARCHAR(500),
+    KiemTraCuoi DATETIME,
+    NgayTao DATETIME DEFAULT GETDATE(),
+    NgayCapNhat DATETIME DEFAULT GETDATE()
 );
 
 -- ================================================
--- TABLE 12: AuditLog (Nhật ký hệ thống)
+-- BẢNG 12: NhatKyHeThong (AuditLog)
 -- ================================================
-CREATE TABLE AuditLog (
-    LogID INT PRIMARY KEY IDENTITY(1,1),
-    UserID INT,
-    Action NVARCHAR(100), -- Hành động
-    TableName NVARCHAR(50), -- Bảng bị tác động
-    RecordID INT, -- ID bản ghi
-    OldValue NVARCHAR(MAX), -- Giá trị cũ (JSON)
-    NewValue NVARCHAR(MAX), -- Giá trị mới (JSON)
-    IPAddress NVARCHAR(50),
-    CreatedAt DATETIME DEFAULT GETDATE(),
+CREATE TABLE NhatKyHeThong (
+    MaNhatKy INT PRIMARY KEY IDENTITY(1,1),
+    MaNguoiDung INT,
+    HanhDong NVARCHAR(100),
+    TenBang NVARCHAR(50),
+    MaBanGhi INT,
+    GiaTriCu NVARCHAR(MAX),
+    GiaTriMoi NVARCHAR(MAX),
+    DiaChiIP NVARCHAR(50),
+    NgayTao DATETIME DEFAULT GETDATE(),
     
-    CONSTRAINT FK_AuditLog_User FOREIGN KEY (UserID) REFERENCES Users(UserID)
+    CONSTRAINT FK_NhatKy_NguoiDung FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
 );
 
 -- ================================================
--- INDEXES for Performance
+-- CHỈ MỤC (INDEXES) để tối ưu hiệu suất
 -- ================================================
-CREATE INDEX IX_Users_Username ON Users(Username);
-CREATE INDEX IX_Employees_Status ON Employees(Status);
-CREATE INDEX IX_Customers_IdentityNumber ON Customers(IdentityNumber);
-CREATE INDEX IX_CreditApp_Status ON CreditApplications(Status);
-CREATE INDEX IX_CreditApp_Customer ON CreditApplications(CustomerID);
-CREATE INDEX IX_Loans_Customer ON Loans(CustomerID);
-CREATE INDEX IX_Loans_Status ON Loans(Status);
-CREATE INDEX IX_PaymentSchedule_DueDate ON PaymentSchedule(DueDate);
-CREATE INDEX IX_PaymentSchedule_Status ON PaymentSchedule(Status);
+CREATE INDEX IX_NguoiDung_TenDangNhap ON NguoiDung(TenDangNhap);
+CREATE INDEX IX_NhanVien_TrangThai ON NhanVien(TrangThai);
+CREATE INDEX IX_KhachHang_SoCMND ON KhachHang(SoCMND);
+CREATE INDEX IX_HoSo_TrangThai ON HoSoVay(TrangThai);
+CREATE INDEX IX_HoSo_KhachHang ON HoSoVay(MaKhachHang);
+CREATE INDEX IX_KhoanVay_KhachHang ON KhoanVay(MaKhachHang);
+CREATE INDEX IX_KhoanVay_TrangThai ON KhoanVay(TrangThai);
+CREATE INDEX IX_LichTra_NgayDenHan ON LichTraNo(NgayDenHan);
+CREATE INDEX IX_LichTra_TrangThai ON LichTraNo(TrangThai);
 
 GO
 
-PRINT '✅ Database schema created successfully!';
+PRINT '✅ Tạo schema database thành công!';
 PRINT '';
-PRINT '📊 Tables created:';
-PRINT '  1. Roles';
-PRINT '  2. Users (Plain text password)';
-PRINT '  3. Employees';
-PRINT '  4. Customers';
-PRINT '  5. LoanProducts';
-PRINT '  6. CreditApplications';
-PRINT '  7. CreditAssessment';
-PRINT '  8. Loans';
-PRINT '  9. PaymentSchedule';
-PRINT ' 10. Payments';
-PRINT ' 11. ExternalSystems';
-PRINT ' 12. AuditLog';
+PRINT '📊 Các bảng đã tạo:';
+PRINT '  1. VaiTro (Roles)';
+PRINT '  2. NguoiDung (Users)';
+PRINT '  3. NhanVien (Employees)';
+PRINT '  4. KhachHang (Customers)';
+PRINT '  5. SanPhamVay (LoanProducts)';
+PRINT '  6. HoSoVay (CreditApplications)';
+PRINT '  7. ThamDinhTinDung (CreditAssessment)';
+PRINT '  8. KhoanVay (Loans)';
+PRINT '  9. LichTraNo (PaymentSchedule)';
+PRINT ' 10. ThanhToan (Payments)';
+PRINT ' 11. HeThongNgoai (ExternalSystems)';
+PRINT ' 12. NhatKyHeThong (AuditLog)';
 PRINT '';
-PRINT '✅ Ready for data insertion!';
+PRINT '✅ Sẵn sàng chèn dữ liệu!';
 GO

@@ -2,9 +2,9 @@
 # 🏦 BANK MANAGEMENT SYSTEM - HỆ THỐNG QUẢN LÝ NGÂN HÀNG
 
 **Sinh viên thực hiện:** Nguyễn Thành Đạt  
-**MSSV:** [20224688]  
+**MSSV:** [20223688]  
 **Môn học:** Phân tích Thiết kế Hướng Đối tượng  
-**Ngày hoàn thành:** 05/01/2026
+**Ngày hoàn thành:** 06/01/2026
 
 ---
 
@@ -36,7 +36,7 @@ Theo phân công nhóm, em chịu trách nhiệm thiết kế và phát triển 
 
 ### ✅ Đối tượng 2: Quản lý Người dùng (Manager - User)
 - Hiển thị danh sách nhân viên
-- Thêm nhân viên mới (có Position + Salary)
+- Thêm nhân viên mới (có ChucVu + MucLuong)
 - Tìm kiếm nhân viên
 - Xem chi tiết hồ sơ
 - Chỉnh sửa thông tin
@@ -46,7 +46,7 @@ Theo phân công nhóm, em chịu trách nhiệm thiết kế và phát triển 
 
 ### ✅ Đối tượng 3: Quản lý Hệ thống Ngoài (Manager - External System)
 - Thêm/Sửa/Xóa đối tác (VNPay, CIC, SBV...)
-- Cập nhật trạng thái (Active/Inactive/Maintenance)
+- Cập nhật trạng thái (KichHoat/KhongKichHoat/BaoTri)
 - Export PDF danh sách
 
 ---
@@ -103,7 +103,7 @@ Theo phân công nhóm, em chịu trách nhiệm thiết kế và phát triển 
 ┌─────────────────────────────────────────────────────────┐
 │                   DATABASE LAYER                         │
 │         SQL Server - BankSystemOOP                      │
-│              12 Tables                                  │
+│              12 Bảng                                    │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -138,133 +138,133 @@ manager_ctrl = ManagerController(employee_service)
 
 ```
 ┌─────────────┐          ┌──────────────────┐
-│   Roles     │◄─────────│     Users        │
+│   VaiTro    │◄─────────│   NguoiDung      │
 └─────────────┘    1:N   └──────────────────┘
                                 │ 1
                                 │
                                 │ 1
                          ┌──────▼──────────┐
-                         │   Employees     │
+                         │   NhanVien      │
                          └─────────────────┘
                                 │
                          ┌──────┴──────┐
                          │             │
-                  AssignedOfficer  ReviewedBy
+            MaNhanVienPhuTrach  NguoiThamDinh
                          │             │
                          │             │
                     ┌────▼─────────────▼────┐
-     ┌─────────┐    │  CreditApplications   │    ┌──────────────┐
-     │Customers│────┤                       │────│ LoanProducts │
-     └─────────┘ N:1└───────────────────────┘1:N └──────────────┘
+     ┌─────────┐    │     HoSoVay          │    ┌──────────────┐
+     │KhachHang│────┤                      │────│ SanPhamVay   │
+     └─────────┘ N:1└──────────────────────┘1:N └──────────────┘
                                 │ 1
                                 │
                                 │ 1
                          ┌──────▼──────────┐
-                         │CreditAssessment │
+                         │ThamDinhTinDung  │
                          └─────────────────┘
                                 │ 1
                                 │
                                 │ 1
                          ┌──────▼──────────┐
-                         │     Loans       │
+                         │   KhoanVay      │
                          └─────────────────┘
 ```
 
 ### 4.2. Bảng quan trọng
 
-#### A. Employees
+#### A. NhanVien
 ```sql
-CREATE TABLE Employees (
-    EmployeeID INT PRIMARY KEY IDENTITY(1,1),
-    UserID INT NOT NULL UNIQUE,
-    FullName NVARCHAR(100) NOT NULL,
-    DateOfBirth DATE,
-    Phone NVARCHAR(15),
+CREATE TABLE NhanVien (
+    MaNhanVien INT PRIMARY KEY IDENTITY(1,1),
+    MaNguoiDung INT NOT NULL UNIQUE,
+    HoTen NVARCHAR(100) NOT NULL,
+    NgaySinh DATE,
+    SoDienThoai NVARCHAR(15),
     Email NVARCHAR(100),
-    Department NVARCHAR(100),
-    Position NVARCHAR(100),     
-    Salary DECIMAL(18,2),         
-    HireDate DATE,
-    ManagerID INT,
-    Status NVARCHAR(20),
+    PhongBan NVARCHAR(100),
+    ChucVu NVARCHAR(100),     
+    MucLuong DECIMAL(18,2),         
+    NgayVaoLam DATE,
+    MaQuanLy INT,
+    TrangThai NVARCHAR(20),
     
-    CONSTRAINT FK_Employees_Users 
-        FOREIGN KEY (UserID) REFERENCES Users(UserID),
-    CONSTRAINT FK_Employees_Manager 
-        FOREIGN KEY (ManagerID) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_NhanVien_NguoiDung 
+        FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
+    CONSTRAINT FK_NhanVien_QuanLy 
+        FOREIGN KEY (MaQuanLy) REFERENCES NhanVien(MaNhanVien)
 );
 ```
 
-#### B. CreditApplications
+#### B. HoSoVay
 ```sql
-CREATE TABLE CreditApplications (
-    ApplicationID INT PRIMARY KEY IDENTITY(1,1),
-    ApplicationNumber NVARCHAR(50) UNIQUE NOT NULL,
-    CustomerID INT NOT NULL,
-    ProductID INT NOT NULL,
-    RequestedAmount DECIMAL(18,2) NOT NULL,
-    RequestedTerm INT NOT NULL,
-    Purpose NVARCHAR(255),
-    Status NVARCHAR(50) DEFAULT N'Pending',
+CREATE TABLE HoSoVay (
+    MaHoSo INT PRIMARY KEY IDENTITY(1,1),
+    SoHoSo NVARCHAR(50) UNIQUE NOT NULL,
+    MaKhachHang INT NOT NULL,
+    MaSanPham INT NOT NULL,
+    SoTienYeuCau DECIMAL(18,2) NOT NULL,
+    KyHanYeuCau INT NOT NULL,
+    MucDich NVARCHAR(255),
+    TrangThai NVARCHAR(50) DEFAULT N'ChoXuLy',
     
-    -- 3 Foreign Keys đến Employees (workflow)
-    AssignedOfficerID INT,
-    ReviewedBy INT,
-    ApprovedBy INT,
+    -- 3 Foreign Keys đến NhanVien (workflow)
+    MaNhanVienPhuTrach INT,
+    NguoiThamDinh INT,
+    NguoiPheDuyet INT,
     
-    ApplicationDate DATETIME DEFAULT GETDATE(),
-    ReviewDate DATETIME,
-    ApprovalDate DATETIME,
-    DisbursementDate DATETIME,
+    NgayNop DATETIME DEFAULT GETDATE(),
+    NgayThamDinh DATETIME,
+    NgayPheDuyet DATETIME,
+    NgayGiaiNgan DATETIME,
     
-    CONSTRAINT FK_CreditApp_Customer 
-        FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
-    CONSTRAINT FK_CreditApp_Product 
-        FOREIGN KEY (ProductID) REFERENCES LoanProducts(ProductID),
-    CONSTRAINT FK_CreditApp_Officer 
-        FOREIGN KEY (AssignedOfficerID) REFERENCES Employees(EmployeeID),
-    CONSTRAINT FK_CreditApp_Reviewer 
-        FOREIGN KEY (ReviewedBy) REFERENCES Employees(EmployeeID),
-    CONSTRAINT FK_CreditApp_Approver 
-        FOREIGN KEY (ApprovedBy) REFERENCES Employees(EmployeeID)
+    CONSTRAINT FK_HoSo_KhachHang 
+        FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKhachHang),
+    CONSTRAINT FK_HoSo_SanPham 
+        FOREIGN KEY (MaSanPham) REFERENCES SanPhamVay(MaSanPham),
+    CONSTRAINT FK_HoSo_NhanVien 
+        FOREIGN KEY (MaNhanVienPhuTrach) REFERENCES NhanVien(MaNhanVien),
+    CONSTRAINT FK_HoSo_NguoiThamDinh 
+        FOREIGN KEY (NguoiThamDinh) REFERENCES NhanVien(MaNhanVien),
+    CONSTRAINT FK_HoSo_NguoiPheDuyet 
+        FOREIGN KEY (NguoiPheDuyet) REFERENCES NhanVien(MaNhanVien)
 );
 ```
 
-#### C. ExternalSystems
+#### C. HeThongNgoai
 ```sql
-CREATE TABLE ExternalSystems (
-    SystemID INT PRIMARY KEY IDENTITY(1,1),
-    SystemName NVARCHAR(100) NOT NULL,
-    SystemType NVARCHAR(50),
-    APIEndpoint NVARCHAR(255),
-    APIKey NVARCHAR(255),
-    Status NVARCHAR(20) DEFAULT N'Active',
-    Description NVARCHAR(500),
+CREATE TABLE HeThongNgoai (
+    MaHeThong INT PRIMARY KEY IDENTITY(1,1),
+    TenHeThong NVARCHAR(100) NOT NULL,
+    LoaiHeThong NVARCHAR(50),
+    DiaChiAPI NVARCHAR(255),
+    KhoaAPI NVARCHAR(255),
+    TrangThai NVARCHAR(20) DEFAULT N'KichHoat',
+    MoTa NVARCHAR(500),
     
-    CONSTRAINT CK_SystemType 
-        CHECK (SystemType IN ('Payment', 'CreditCheck', 'ExchangeRate', 'Other')),
-    CONSTRAINT CK_Status 
-        CHECK (Status IN (N'Active', N'Inactive', N'Maintenance'))
+    CONSTRAINT CK_LoaiHeThong 
+        CHECK (LoaiHeThong IN ('ThanhToan', 'KiemTraTinDung', 'TyGia', 'Khac')),
+    CONSTRAINT CK_TrangThai 
+        CHECK (TrangThai IN (N'KichHoat', N'KhongKichHoat', N'BaoTri'))
 );
 ```
 
 ### 4.3. Indexes cho Performance
 ```sql
 -- Tối ưu query
-CREATE INDEX IX_Users_Username ON Users(Username);
-CREATE INDEX IX_Employees_Status ON Employees(Status);
-CREATE INDEX IX_CreditApp_Status ON CreditApplications(Status);
-CREATE INDEX IX_CreditApp_Customer ON CreditApplications(CustomerID);
-CREATE INDEX IX_Loans_Status ON Loans(Status);
+CREATE INDEX IX_NguoiDung_TenDangNhap ON NguoiDung(TenDangNhap);
+CREATE INDEX IX_NhanVien_TrangThai ON NhanVien(TrangThai);
+CREATE INDEX IX_HoSo_TrangThai ON HoSoVay(TrangThai);
+CREATE INDEX IX_HoSo_KhachHang ON HoSoVay(MaKhachHang);
+CREATE INDEX IX_KhoanVay_TrangThai ON KhoanVay(TrangThai);
 ```
 
 ### 4.4. Workflow State Machine
 ```
-CreditApplications.Status:
+HoSoVay.TrangThai:
 
-Pending → UnderReview → Approved → Disbursed → Completed
-    ↓                       ↓
-  Rejected              Cancelled
+ChoXuLy → DangThamDinh → DaDuyet → DaGiaiNgan → HoanThanh
+    ↓                        ↓
+  TuChoi                  DaHuy
 ```
 
 ---
@@ -282,9 +282,9 @@ Pending → UnderReview → Approved → Disbursed → Completed
 2. Chọn sản phẩm vay từ dropdown (load từ DB)
 3. Nhập số tiền vay, kỳ hạn, mục đích
 4. Hệ thống hiển thị thông tin lãi suất tự động
-5. Validate dữ liệu (amount > 0, term > 0)
-6. Generate ApplicationNumber: `APP-YYYYMMDDHHMMSS`
-7. INSERT vào database với Status = 'Pending'
+5. Validate dữ liệu (SoTienYeuCau > 0, KyHanYeuCau > 0)
+6. Generate SoHoSo: `APP-YYYY-NNNNNN`
+7. INSERT vào database với TrangThai = N'ChoXuLy'
 
 **Code location:**
 - View: `bank_app_final_COMPLETE.py` (dòng 510-600)
@@ -294,10 +294,10 @@ Pending → UnderReview → Approved → Disbursed → Completed
 
 **SQL query:**
 ```sql
-INSERT INTO CreditApplications 
-(ApplicationNumber, CustomerID, ProductID, RequestedAmount, 
- RequestedTerm, Purpose, Status, AssignedOfficerID, ApplicationDate)
-VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, GETDATE())
+INSERT INTO HoSoVay 
+(SoHoSo, MaKhachHang, MaSanPham, SoTienYeuCau, 
+ KyHanYeuCau, MucDich, TrangThai, MaNhanVienPhuTrach, NgayNop)
+VALUES (?, ?, ?, ?, ?, ?, N'ChoXuLy', ?, GETDATE())
 ```
 
 ---
@@ -307,25 +307,26 @@ VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, GETDATE())
 - Nhân viên bắt đầu thẩm định hồ sơ đang chờ
 
 **Luồng xử lý:**
-1. Hiển thị danh sách hồ sơ Status = 'Pending'
+1. Hiển thị danh sách hồ sơ TrangThai = N'ChoXuLy'
 2. Nhân viên chọn hồ sơ và bấm "Bắt đầu thẩm định"
-3. Check Status phải là 'Pending'
-4. UPDATE Status = 'UnderReview'
-5. SET ReviewedBy = current_officer_id
-6. SET ReviewDate = GETDATE()
+3. Check TrangThai phải là N'ChoXuLy'
+4. UPDATE TrangThai = N'DangThamDinh'
+5. SET NguoiThamDinh = current_officer_id
+6. SET NgayThamDinh = GETDATE()
 
 **State transition:**
 ```
-Pending → UnderReview
+ChoXuLy → DangThamDinh
 ```
 
 **SQL query:**
 ```sql
-UPDATE CreditApplications 
-SET Status = 'UnderReview', 
-    ReviewedBy = ?,
-    ReviewDate = GETDATE()
-WHERE ApplicationID = ? AND Status = 'Pending'
+UPDATE HoSoVay 
+SET TrangThai = N'DangThamDinh', 
+    NguoiThamDinh = ?,
+    NgayThamDinh = GETDATE(),
+    NgayCapNhat = GETDATE()
+WHERE MaHoSo = ? AND TrangThai = N'ChoXuLy'
 ```
 
 ---
@@ -335,15 +336,26 @@ WHERE ApplicationID = ? AND Status = 'Pending'
 - Phê duyệt hồ sơ đã thẩm định
 
 **Luồng xử lý:**
-1. Hiển thị danh sách Status = 'UnderReview'
+1. Hiển thị danh sách TrangThai = N'DangThamDinh'
 2. Nhân viên/Manager chọn hồ sơ và bấm "Phê duyệt"
-3. Validate: Status phải là 'UnderReview'
-4. UPDATE Status = 'Approved'
-5. SET ApprovedBy, ApprovalDate
+3. Validate: TrangThai phải là N'DangThamDinh'
+4. UPDATE TrangThai = N'DaDuyet'
+5. SET NguoiPheDuyet, NgayPheDuyet
 
 **State transition:**
 ```
-UnderReview → Approved
+DangThamDinh → DaDuyet
+```
+
+**SQL query:**
+```sql
+UPDATE HoSoVay
+SET TrangThai = N'DaDuyet',
+    NguoiPheDuyet = ?,
+    NgayPheDuyet = GETDATE(),
+    GhiChu = ?,
+    NgayCapNhat = GETDATE()
+WHERE MaHoSo = ? AND TrangThai = N'DangThamDinh'
 ```
 
 ---
@@ -353,16 +365,25 @@ UnderReview → Approved
 - Giải ngân cho hồ sơ đã được phê duyệt
 
 **Luồng xử lý:**
-1. Hiển thị danh sách Status = 'Approved'
+1. Hiển thị danh sách TrangThai = N'DaDuyet'
 2. Nhân viên chọn và bấm "Giải ngân"
-3. Validate: Status = 'Approved'
-4. UPDATE Status = 'Disbursed'
-5. SET DisbursementDate
-6. INSERT vào bảng Loans (tạo khoản vay chính thức)
+3. Validate: TrangThai = N'DaDuyet'
+4. UPDATE TrangThai = N'DaGiaiNgan'
+5. SET NgayGiaiNgan
+6. INSERT vào bảng KhoanVay (tạo khoản vay chính thức)
 
 **State transition:**
 ```
-Approved → Disbursed
+DaDuyet → DaGiaiNgan
+```
+
+**SQL query:**
+```sql
+UPDATE HoSoVay
+SET TrangThai = N'DaGiaiNgan',
+    NgayGiaiNgan = GETDATE(),
+    NgayCapNhat = GETDATE()
+WHERE MaHoSo = ? AND TrangThai = N'DaDuyet'
 ```
 
 ---
@@ -372,15 +393,26 @@ Approved → Disbursed
 - Từ chối hồ sơ không đủ điều kiện
 
 **Luồng xử lý:**
-1. Hiển thị danh sách Status = 'UnderReview'
+1. Hiển thị danh sách TrangThai = N'DangThamDinh'
 2. Nhân viên/Manager chọn và bấm "Từ chối"
 3. Input dialog yêu cầu nhập lý do
-4. UPDATE Status = 'Rejected'
-5. SET RejectionReason
+4. UPDATE TrangThai = N'TuChoi'
+5. SET LyDoTuChoi
 
 **State transition:**
 ```
-UnderReview → Rejected
+DangThamDinh → TuChoi
+```
+
+**SQL query:**
+```sql
+UPDATE HoSoVay
+SET TrangThai = N'TuChoi',
+    NguoiPheDuyet = ?,
+    NgayPheDuyet = GETDATE(),
+    LyDoTuChoi = ?,
+    NgayCapNhat = GETDATE()
+WHERE MaHoSo = ?
 ```
 
 ---
@@ -392,11 +424,11 @@ UnderReview → Rejected
 **Tính năng:**
 1. **Cards thống kê:**
    - Tổng số hồ sơ
-   - Chờ xử lý (Pending)
-   - Đang thẩm định (UnderReview)
-   - Đã duyệt (Approved)
-   - Đã giải ngân (Disbursed)
-   - Từ chối (Rejected)
+   - Chờ xử lý (ChoXuLy)
+   - Đang thẩm định (DangThamDinh)
+   - Đã duyệt (DaDuyet)
+   - Đã giải ngân (DaGiaiNgan)
+   - Từ chối (TuChoi)
 
 2. **Pie Chart (Matplotlib):**
    - Phân bổ trạng thái theo %
@@ -413,13 +445,13 @@ UnderReview → Rejected
 ```python
 # Statistics query
 SELECT 
-    COUNT(*) as Total,
-    SUM(CASE WHEN Status = 'Pending' THEN 1 ELSE 0 END) as Pending,
-    SUM(CASE WHEN Status = 'UnderReview' THEN 1 ELSE 0 END) as UnderReview,
-    SUM(CASE WHEN Status = 'Approved' THEN 1 ELSE 0 END) as Approved,
-    SUM(CASE WHEN Status = 'Disbursed' THEN 1 ELSE 0 END) as Disbursed,
-    SUM(CASE WHEN Status = 'Rejected' THEN 1 ELSE 0 END) as Rejected
-FROM CreditApplications
+    COUNT(*) as TongSo,
+    SUM(CASE WHEN TrangThai = N'ChoXuLy' THEN 1 ELSE 0 END) as ChoXuLy,
+    SUM(CASE WHEN TrangThai = N'DangThamDinh' THEN 1 ELSE 0 END) as DangThamDinh,
+    SUM(CASE WHEN TrangThai = N'DaDuyet' THEN 1 ELSE 0 END) as DaDuyet,
+    SUM(CASE WHEN TrangThai = N'DaGiaiNgan' THEN 1 ELSE 0 END) as DaGiaiNgan,
+    SUM(CASE WHEN TrangThai = N'TuChoi' THEN 1 ELSE 0 END) as TuChoi
+FROM HoSoVay
 ```
 
 ---
@@ -431,35 +463,35 @@ FROM CreditApplications
 - Hiển thị toàn bộ nhân viên trong hệ thống
 
 **Tính năng:**
-- Treeview với 7 cột: ID, Name, Email, Department, **Position**, **Salary**, Status
-- Sort by EmployeeID
+- Treeview với 7 cột: MaNhanVien, HoTen, Email, PhongBan, **ChucVu**, **MucLuong**, TrangThai
+- Sort by MaNhanVien
 - Load từ database qua Repository Pattern
 
 **SQL query:**
 ```sql
-SELECT EmployeeID, FullName, Email, Department, 
-       Position, Salary, Status
-FROM Employees
-WHERE DeletedAt IS NULL
-ORDER BY EmployeeID
+SELECT MaNhanVien, HoTen, Email, PhongBan, 
+       ChucVu, MucLuong, TrangThai
+FROM NhanVien
+WHERE NgayXoa IS NULL
+ORDER BY MaNhanVien
 ```
 
 ---
 
 #### Thêm nhân viên mới ⭐
 **Mô tả:**
-- Thêm nhân viên mới **CÓ Position và Salary**
+- Thêm nhân viên mới **CÓ ChucVu và MucLuong**
 
 **Luồng xử lý:**
 1. Hiển thị dialog form scrollable
-2. Nhập: Username, Password, FullName, Email, Phone, Department, **Position**, **Salary**
+2. Nhập: TenDangNhap, MatKhau, HoTen, Email, SoDienThoai, PhongBan, **ChucVu**, **MucLuong**
 3. Validate:
    - Email có @ không
-   - Salary > 0
+   - MucLuong > 0
    - Required fields không rỗng
-4. **Step 1:** INSERT INTO Users (Username, Password, RoleID)
-5. Get UserID từ @@IDENTITY
-6. **Step 2:** INSERT INTO Employees (UserID, FullName, **Position**, **Salary**, ...)
+4. **Step 1:** INSERT INTO NguoiDung (TenDangNhap, MatKhau, MaVaiTro)
+5. Get MaNguoiDung từ @@IDENTITY
+6. **Step 2:** INSERT INTO NhanVien (MaNguoiDung, HoTen, **ChucVu**, **MucLuong**, ...)
 7. Reload danh sách
 
 **Validation code:**
@@ -480,16 +512,16 @@ except ValueError:
 **SQL queries:**
 ```sql
 -- Step 1: Create User
-INSERT INTO Users (Username, PasswordPlainText, RoleID, IsActive)
+INSERT INTO NguoiDung (TenDangNhap, MatKhau, MaVaiTro, KichHoat)
 VALUES (?, ?, ?, 1);
 
 SELECT @@IDENTITY;
 
 -- Step 2: Create Employee
-INSERT INTO Employees 
-(UserID, FullName, Email, Phone, Department, 
- Position, Salary, HireDate, Status)
-VALUES (?, ?, ?, ?, ?, ?, ?, CAST(GETDATE() AS DATE), 'Active');
+INSERT INTO NhanVien 
+(MaNguoiDung, HoTen, Email, SoDienThoai, PhongBan, 
+ ChucVu, MucLuong, NgayVaoLam, TrangThai)
+VALUES (?, ?, ?, ?, ?, ?, ?, CAST(GETDATE() AS DATE), N'KichHoat');
 ```
 
 ---
@@ -500,16 +532,16 @@ VALUES (?, ?, ?, ?, ?, ?, ?, CAST(GETDATE() AS DATE), 'Active');
 
 **Tính năng:**
 - Search box + button
-- Search theo: FullName, Email, Department
+- Search theo: HoTen, Email, PhongBan
 - Hiển thị kết quả trong Treeview
 
 **SQL query:**
 ```sql
-SELECT * FROM Employees
-WHERE (FullName LIKE '%' + ? + '%' 
+SELECT * FROM NhanVien
+WHERE (HoTen LIKE '%' + ? + '%' 
        OR Email LIKE '%' + ? + '%'
-       OR Department LIKE '%' + ? + '%')
-  AND DeletedAt IS NULL
+       OR PhongBan LIKE '%' + ? + '%')
+  AND NgayXoa IS NULL
 ```
 
 ---
@@ -521,7 +553,7 @@ WHERE (FullName LIKE '%' + ? + '%'
 **Tính năng:**
 - Select nhân viên trong Treeview
 - Bấm "Xem chi tiết"
-- MessageBox hiển thị: ID, Name, Email, Department, Position, Salary, Status
+- MessageBox hiển thị: MaNhanVien, HoTen, Email, PhongBan, ChucVu, MucLuong, TrangThai
 
 ---
 
@@ -532,49 +564,50 @@ WHERE (FullName LIKE '%' + ? + '%'
 **Luồng xử lý:**
 1. Select nhân viên và bấm "Chỉnh sửa"
 2. Dialog pre-filled với dữ liệu hiện tại
-3. Cho phép sửa: FullName, Email, Phone, Department, **Position**, **Salary**
+3. Cho phép sửa: HoTen, Email, SoDienThoai, PhongBan, **ChucVu**, **MucLuong**
 4. Validate trước khi UPDATE
 5. UPDATE vào database
 
 **SQL query:**
 ```sql
-UPDATE Employees
-SET FullName = ?,
+UPDATE NhanVien
+SET HoTen = ?,
     Email = ?,
-    Phone = ?,
-    Department = ?,
-    Position = ?,
-    Salary = ?,
-    UpdatedAt = GETDATE()
-WHERE EmployeeID = ?
+    SoDienThoai = ?,
+    PhongBan = ?,
+    ChucVu = ?,
+    MucLuong = ?,
+    NgayCapNhat = GETDATE()
+WHERE MaNhanVien = ?
 ```
 
 ---
 
 #### Gán vai trò
 **Mô tả:**
-- Integrated trong UC05.2 khi tạo User với RoleID
+- Integrated trong UC05.2 khi tạo NguoiDung với MaVaiTro
 
 ---
 
 #### Khóa/Mở khóa tài khoản
 **Mô tả:**
-- Toggle trạng thái Active ↔ Locked
+- Toggle trạng thái KichHoat ↔ BiKhoa
 
 **Luồng xử lý:**
 1. Select nhân viên
 2. Bấm "Khóa/Mở khóa"
-3. Check Status hiện tại
-4. UPDATE Status = 'Locked' (nếu Active) hoặc 'Active' (nếu Locked)
+3. Check TrangThai hiện tại
+4. UPDATE TrangThai = N'BiKhoa' (nếu KichHoat) hoặc N'KichHoat' (nếu BiKhoa)
 
 **SQL query:**
 ```sql
-UPDATE Employees
-SET Status = CASE 
-    WHEN Status = 'Active' THEN 'Locked'
-    WHEN Status = 'Locked' THEN 'Active'
-END
-WHERE EmployeeID = ?
+UPDATE NhanVien
+SET TrangThai = CASE 
+    WHEN TrangThai = N'KichHoat' THEN N'BiKhoa'
+    WHEN TrangThai = N'BiKhoa' THEN N'KichHoat'
+END,
+NgayCapNhat = GETDATE()
+WHERE MaNhanVien = ?
 ```
 
 ---
@@ -585,7 +618,7 @@ WHERE EmployeeID = ?
 
 **Tính năng:**
 1. Get all employees từ database
-2. Sort by EmployeeID
+2. Sort by MaNhanVien
 3. Create PDF với ReportLab
 4. Landscape A4 format
 5. Table với styled header (blue #1f6aa5)
@@ -602,7 +635,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 doc = SimpleDocTemplate(filename, pagesize=landscape(A4))
 
 # Table data
-data = [['ID', 'Họ tên', 'Email', 'Phòng ban', 'Chức vụ', 'Lương', 'Trạng thái']]
+data = [['Mã NV', 'Họ tên', 'Email', 'Phòng ban', 'Chức vụ', 'Lương', 'Trạng thái']]
 for emp in employees:
     data.append([emp.id, emp.name, emp.email, ...])
 
@@ -625,20 +658,20 @@ table.setStyle(TableStyle([
 
 **Luồng xử lý:**
 1. Dialog form với các fields:
-   - SystemName (required)
-   - SystemType: dropdown (Payment, CreditCheck, ExchangeRate, Other)
-   - APIEndpoint
-   - APIKey
-   - Description
-2. Validate: SystemName không rỗng
-3. INSERT vào ExternalSystems
+   - TenHeThong (required)
+   - LoaiHeThong: dropdown (ThanhToan, KiemTraTinDung, TyGia, Khac)
+   - DiaChiAPI
+   - KhoaAPI
+   - MoTa
+2. Validate: TenHeThong không rỗng
+3. INSERT vào HeThongNgoai
 
 **SQL query:**
 ```sql
-INSERT INTO ExternalSystems 
-(SystemName, SystemType, APIEndpoint, APIKey, 
- Description, Status, CreatedAt)
-VALUES (?, ?, ?, ?, ?, 'Active', GETDATE())
+INSERT INTO HeThongNgoai 
+(TenHeThong, LoaiHeThong, DiaChiAPI, KhoaAPI, 
+ MoTa, TrangThai, NgayTao)
+VALUES (?, ?, ?, ?, ?, N'KichHoat', GETDATE())
 ```
 
 ---
@@ -650,15 +683,15 @@ VALUES (?, ?, ?, ?, ?, 'Active', GETDATE())
 **Luồng xử lý:**
 1. Select hệ thống
 2. Bấm "Cập nhật trạng thái"
-3. Dialog với radio buttons: Active, Inactive, Maintenance
-4. UPDATE Status
+3. Dialog với radio buttons: KichHoat, KhongKichHoat, BaoTri
+4. UPDATE TrangThai
 
 **SQL query:**
 ```sql
-UPDATE ExternalSystems
-SET Status = ?,
-    UpdatedAt = GETDATE()
-WHERE SystemID = ?
+UPDATE HeThongNgoai
+SET TrangThai = ?,
+    NgayCapNhat = GETDATE()
+WHERE MaHeThong = ?
 ```
 
 ---
@@ -671,7 +704,12 @@ WHERE SystemID = ?
 1. Select hệ thống
 2. Bấm "Xóa"
 3. Confirmation dialog
-4. DELETE hoặc soft delete (SET DeletedAt)
+4. DELETE
+
+**SQL query:**
+```sql
+DELETE FROM HeThongNgoai WHERE MaHeThong = ?
+```
 
 ---
 
@@ -682,7 +720,7 @@ WHERE SystemID = ?
 **Tính năng:**
 - Tương tự Employee PDF
 - Styled header (teal #16a085)
-- Table: ID, SystemName, Type, Endpoint, Status
+- Table: MaHeThong, TenHeThong, LoaiHeThong, DiaChiAPI, TrangThai
 - Filename: `DanhSachHeThong_YYYYMMDD_HHMMSS.pdf`
 
 ---
@@ -774,7 +812,7 @@ class Employee:
     
     Attributes:
         employee_id (int): ID duy nhất
-        user_id (int): Liên kết với Users table (1-1)
+        user_id (int): Liên kết với NguoiDung table (1-1)
         full_name (str): Họ tên đầy đủ
         date_of_birth (date): Ngày sinh
         phone (str): Số điện thoại
@@ -784,7 +822,7 @@ class Employee:
         salary (Decimal): Lương (VND)
         hire_date (date): Ngày vào làm
         manager_id (int): ID của manager (self-reference)
-        status (str): 'Active' hoặc 'Locked'
+        status (str): 'KichHoat' hoặc 'BiKhoa'
         created_at (datetime): Ngày tạo record
         updated_at (datetime): Ngày cập nhật cuối
     """
@@ -818,7 +856,7 @@ class Employee:
     
     def is_active(self) -> bool:
         """Check nhân viên còn active không"""
-        return self.status == 'Active'
+        return self.status == 'KichHoat'
     
     def years_of_service(self) -> int:
         """Tính số năm công tác"""
@@ -838,8 +876,8 @@ class Employee:
   - Reusability: Dùng ở nhiều nơi (View, Service, Controller)
 
 - **Tại sao có Position và Salary:**
-  - UC05.2 yêu cầu: "Thêm nhân viên mới có Position + Salary"
-  - UC05.1 yêu cầu: Hiển thị Position và Salary trong danh sách
+  - UC05.2 yêu cầu: "Thêm nhân viên mới có ChucVu + MucLuong"
+  - UC05.1 yêu cầu: Hiển thị ChucVu và MucLuong trong danh sách
   - Business need: Quản lý cấp bậc và quỹ lương
 
 ---
@@ -930,32 +968,32 @@ class CreditApplication:
     def get_status_display(self) -> str:
         """Hiển thị status tiếng Việt"""
         status_map = {
-            'Pending': 'Chờ xử lý',
-            'UnderReview': 'Đang thẩm định',
-            'Approved': 'Đã duyệt',
-            'Rejected': 'Từ chối',
-            'Disbursed': 'Đã giải ngân',
-            'Completed': 'Hoàn thành',
-            'Cancelled': 'Đã hủy'
+            'ChoXuLy': 'Chờ xử lý',
+            'DangThamDinh': 'Đang thẩm định',
+            'DaDuyet': 'Đã duyệt',
+            'TuChoi': 'Từ chối',
+            'DaGiaiNgan': 'Đã giải ngân',
+            'HoanThanh': 'Hoàn thành',
+            'DaHuy': 'Đã hủy'
         }
         return status_map.get(self.status, self.status)
     
     # Workflow state validation methods
     def can_start_review(self) -> bool:
         """UC03.2: Check có thể bắt đầu thẩm định không"""
-        return self.status == 'Pending'
+        return self.status == 'ChoXuLy'
     
     def can_approve(self) -> bool:
         """UC03.3: Check có thể phê duyệt không"""
-        return self.status == 'UnderReview'
+        return self.status == 'DangThamDinh'
     
     def can_disburse(self) -> bool:
         """UC03.4: Check có thể giải ngân không"""
-        return self.status == 'Approved'
+        return self.status == 'DaDuyet'
     
     def can_reject(self) -> bool:
         """UC03.8: Check có thể từ chối không"""
-        return self.status in ['Pending', 'UnderReview']
+        return self.status in ['ChoXuLy', 'DangThamDinh']
     
     def get_workflow_history(self) -> str:
         """Lấy lịch sử workflow cho display"""
@@ -1012,10 +1050,10 @@ class ExternalSystem:
     Attributes:
         system_id (int): ID duy nhất
         system_name (str): Tên hệ thống (VD: "VNPay", "CIC", "SBV")
-        system_type (str): Loại (Payment, CreditCheck, ExchangeRate, Other)
+        system_type (str): Loại (ThanhToan, KiemTraTinDung, TyGia, Khac)
         api_endpoint (str): URL endpoint
         api_key (str): API key (sensitive data)
-        status (str): Active, Inactive, Maintenance
+        status (str): KichHoat, KhongKichHoat, BaoTri
         description (str): Mô tả chi tiết
         last_sync (datetime): Lần đồng bộ cuối cùng
         created_at (datetime): Ngày tạo
@@ -1023,7 +1061,7 @@ class ExternalSystem:
     """
     
     def __init__(self, system_id, system_name, system_type, api_endpoint,
-                 api_key=None, status='Active', description=None, last_sync=None,
+                 api_key=None, status='KichHoat', description=None, last_sync=None,
                  created_at=None, updated_at=None):
         
         self.system_id = system_id
@@ -1040,42 +1078,42 @@ class ExternalSystem:
     # Status checking methods
     def is_active(self) -> bool:
         """Check hệ thống đang active không"""
-        return self.status == 'Active'
+        return self.status == 'KichHoat'
     
     def is_maintenance(self) -> bool:
         """Check hệ thống đang bảo trì không"""
-        return self.status == 'Maintenance'
+        return self.status == 'BaoTri'
     
     # Type checking methods
     def is_payment_gateway(self) -> bool:
         """Check có phải payment gateway không"""
-        return self.system_type == 'Payment'
+        return self.system_type == 'ThanhToan'
     
     def is_credit_check(self) -> bool:
         """Check có phải hệ thống kiểm tra tín dụng không"""
-        return self.system_type == 'CreditCheck'
+        return self.system_type == 'KiemTraTinDung'
     
     def is_exchange_rate(self) -> bool:
         """Check có phải hệ thống tỷ giá không"""
-        return self.system_type == 'ExchangeRate'
+        return self.system_type == 'TyGia'
     
     # Display methods
     def get_type_display(self) -> str:
         """Hiển thị loại hệ thống tiếng Việt"""
         type_map = {
-            'Payment': 'Cổng thanh toán',
-            'CreditCheck': 'Kiểm tra tín dụng',
-            'ExchangeRate': 'Tỷ giá ngoại tệ',
-            'Other': 'Khác'
+            'ThanhToan': 'Cổng thanh toán',
+            'KiemTraTinDung': 'Kiểm tra tín dụng',
+            'TyGia': 'Tỷ giá ngoại tệ',
+            'Khac': 'Khác'
         }
         return type_map.get(self.system_type, self.system_type)
     
     def get_status_display(self) -> str:
         """Hiển thị trạng thái tiếng Việt"""
         status_map = {
-            'Active': 'Đang hoạt động',
-            'Inactive': 'Ngưng hoạt động',
-            'Maintenance': 'Đang bảo trì'
+            'KichHoat': 'Đang hoạt động',
+            'KhongKichHoat': 'Ngưng hoạt động',
+            'BaoTri': 'Đang bảo trì'
         }
         return status_map.get(self.status, self.status)
     
@@ -1130,7 +1168,7 @@ class EmployeeRepository:
     Repository cho Employee data access
     
     Responsibilities:
-    - TẤT CẢ SQL queries cho Employees table
+    - TẤT CẢ SQL queries cho NhanVien table
     - Mapping DB rows → Employee objects
     - CRUD operations
     - Search operations
@@ -1153,20 +1191,20 @@ class EmployeeRepository:
         - Type conversion (date, decimal)
         """
         return Employee(
-            employee_id=row.EmployeeID,
-            user_id=row.UserID,
-            full_name=row.FullName,
-            date_of_birth=row.DateOfBirth,
-            phone=row.Phone,
+            employee_id=row.MaNhanVien,
+            user_id=row.MaNguoiDung,
+            full_name=row.HoTen,
+            date_of_birth=row.NgaySinh,
+            phone=row.SoDienThoai,
             email=row.Email,
-            department=row.Department,
-            position=row.Position,      
-            salary=row.Salary,          
-            hire_date=row.HireDate,
-            manager_id=row.ManagerID,
-            status=row.Status,
-            created_at=row.CreatedAt,
-            updated_at=row.UpdatedAt
+            department=row.PhongBan,
+            position=row.ChucVu,      
+            salary=row.MucLuong,          
+            hire_date=row.NgayVaoLam,
+            manager_id=row.MaQuanLy,
+            status=row.TrangThai,
+            created_at=row.NgayTao,
+            updated_at=row.NgayCapNhat
         )
     
     def get_all(self) -> List[Employee]:
@@ -1175,8 +1213,8 @@ class EmployeeRepository:
         
         SQL Query breakdown:
         - SELECT: Tất cả columns cần thiết
-        - WHERE DeletedAt IS NULL: Chỉ lấy active records (soft delete)
-        - ORDER BY EmployeeID: Sort theo ID
+        - WHERE NgayXoa IS NULL: Chỉ lấy active records (soft delete)
+        - ORDER BY MaNhanVien: Sort theo ID
         
         Returns:
             List[Employee]: Danh sách Employee objects
@@ -1186,12 +1224,12 @@ class EmployeeRepository:
         
         cursor.execute("""
             SELECT 
-                EmployeeID, UserID, FullName, DateOfBirth, Phone, Email,
-                Department, Position, Salary, HireDate, ManagerID, Status,
-                CreatedAt, UpdatedAt
-            FROM Employees
-            WHERE DeletedAt IS NULL
-            ORDER BY EmployeeID
+                MaNhanVien, MaNguoiDung, HoTen, NgaySinh, SoDienThoai, Email,
+                PhongBan, ChucVu, MucLuong, NgayVaoLam, MaQuanLy, TrangThai,
+                NgayTao, NgayCapNhat
+            FROM NhanVien
+            WHERE NgayXoa IS NULL
+            ORDER BY MaNhanVien
         """)
         
         employees = [self._map_to_employee(row) for row in cursor.fetchall()]
@@ -1210,11 +1248,11 @@ class EmployeeRepository:
         
         cursor.execute("""
             SELECT 
-                EmployeeID, UserID, FullName, DateOfBirth, Phone, Email,
-                Department, Position, Salary, HireDate, ManagerID, Status,
-                CreatedAt, UpdatedAt
-            FROM Employees
-            WHERE EmployeeID = ? AND DeletedAt IS NULL
+                MaNhanVien, MaNguoiDung, HoTen, NgaySinh, SoDienThoai, Email,
+                PhongBan, ChucVu, MucLuong, NgayVaoLam, MaQuanLy, TrangThai,
+                NgayTao, NgayCapNhat
+            FROM NhanVien
+            WHERE MaNhanVien = ? AND NgayXoa IS NULL
         """, (employee_id,))
         
         row = cursor.fetchone()
@@ -1228,11 +1266,11 @@ class EmployeeRepository:
         UC05.2: Tạo nhân viên mới
         
         SQL Query breakdown:
-        - INSERT INTO Employees: Thêm record mới
+        - INSERT INTO NhanVien: Thêm record mới
         - VALUES: user_id, full_name, position, salary, ...
-        - HireDate: CAST(GETDATE() AS DATE) - Ngày hiện tại
-        - Status: 'Active' - Mặc định active
-        - CreatedAt: GETDATE() - Timestamp
+        - NgayVaoLam: CAST(GETDATE() AS DATE) - Ngày hiện tại
+        - TrangThai: N'KichHoat' - Mặc định active
+        - NgayTao: GETDATE() - Timestamp
         
         Returns:
             Tuple[bool, int, str]: (success, employee_id, message)
@@ -1242,10 +1280,10 @@ class EmployeeRepository:
             cursor = conn.cursor()
             
             cursor.execute("""
-                INSERT INTO Employees 
-                (UserID, FullName, Email, Phone, Department, 
-                 Position, Salary, HireDate, Status, CreatedAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CAST(GETDATE() AS DATE), 'Active', GETDATE())
+                INSERT INTO NhanVien 
+                (MaNguoiDung, HoTen, Email, SoDienThoai, PhongBan, 
+                 ChucVu, MucLuong, NgayVaoLam, TrangThai, NgayTao)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CAST(GETDATE() AS DATE), N'KichHoat', GETDATE())
             """, (user_id, full_name, email, phone, department, position, salary))
             
             conn.commit()
@@ -1268,24 +1306,24 @@ class EmployeeRepository:
         UC05.5: Cập nhật thông tin nhân viên
         
         SQL Query:
-        - UPDATE Employees SET: Cập nhật các fields
-        - UpdatedAt = GETDATE(): Track last modification
-        - WHERE EmployeeID = ?: Chỉ update 1 record
+        - UPDATE NhanVien SET: Cập nhật các fields
+        - NgayCapNhat = GETDATE(): Track last modification
+        - WHERE MaNhanVien = ?: Chỉ update 1 record
         """
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             
             cursor.execute("""
-                UPDATE Employees
-                SET FullName = ?,
+                UPDATE NhanVien
+                SET HoTen = ?,
                     Email = ?,
-                    Phone = ?,
-                    Department = ?,
-                    Position = ?,
-                    Salary = ?,
-                    UpdatedAt = GETDATE()
-                WHERE EmployeeID = ?
+                    SoDienThoai = ?,
+                    PhongBan = ?,
+                    ChucVu = ?,
+                    MucLuong = ?,
+                    NgayCapNhat = GETDATE()
+                WHERE MaNhanVien = ?
             """, (full_name, email, phone, department, position, salary, employee_id))
             
             conn.commit()
@@ -1297,7 +1335,7 @@ class EmployeeRepository:
     
     def update_status(self, employee_id: int, new_status: str) -> Tuple[bool, str]:
         """
-        UC05.7: Cập nhật trạng thái nhân viên (Active/Locked)
+        UC05.7: Cập nhật trạng thái nhân viên (KichHoat/BiKhoa)
         
         Tại sao riêng method này:
         - Status update là operation thường xuyên
@@ -1309,10 +1347,10 @@ class EmployeeRepository:
             cursor = conn.cursor()
             
             cursor.execute("""
-                UPDATE Employees
-                SET Status = ?,
-                    UpdatedAt = GETDATE()
-                WHERE EmployeeID = ?
+                UPDATE NhanVien
+                SET TrangThai = ?,
+                    NgayCapNhat = GETDATE()
+                WHERE MaNhanVien = ?
             """, (new_status, employee_id))
             
             conn.commit()
@@ -1328,7 +1366,7 @@ class EmployeeRepository:
         
         SQL Query breakdown:
         - LIKE '%keyword%': Search pattern cho partial match
-        - OR: Search multiple columns (FullName, Email, Department)
+        - OR: Search multiple columns (HoTen, Email, PhongBan)
         - Case insensitive: SQL Server default
         
         Returns:
@@ -1340,15 +1378,15 @@ class EmployeeRepository:
         search_pattern = f"%{keyword}%"
         cursor.execute("""
             SELECT 
-                EmployeeID, UserID, FullName, DateOfBirth, Phone, Email,
-                Department, Position, Salary, HireDate, ManagerID, Status,
-                CreatedAt, UpdatedAt
-            FROM Employees
-            WHERE (FullName LIKE ? 
+                MaNhanVien, MaNguoiDung, HoTen, NgaySinh, SoDienThoai, Email,
+                PhongBan, ChucVu, MucLuong, NgayVaoLam, MaQuanLy, TrangThai,
+                NgayTao, NgayCapNhat
+            FROM NhanVien
+            WHERE (HoTen LIKE ? 
                    OR Email LIKE ? 
-                   OR Department LIKE ?)
-              AND DeletedAt IS NULL
-            ORDER BY EmployeeID
+                   OR PhongBan LIKE ?)
+              AND NgayXoa IS NULL
+            ORDER BY MaNhanVien
         """, (search_pattern, search_pattern, search_pattern))
         
         employees = [self._map_to_employee(row) for row in cursor.fetchall()]
@@ -1357,7 +1395,7 @@ class EmployeeRepository:
     
     def get_by_user_id(self, user_id: int) -> Optional[Employee]:
         """
-        Helper: Lấy Employee theo UserID (1-1 relationship)
+        Helper: Lấy Employee theo MaNguoiDung (1-1 relationship)
         
         Dùng cho: Login flow - tìm Employee từ User
         """
@@ -1366,11 +1404,11 @@ class EmployeeRepository:
         
         cursor.execute("""
             SELECT 
-                EmployeeID, UserID, FullName, DateOfBirth, Phone, Email,
-                Department, Position, Salary, HireDate, ManagerID, Status,
-                CreatedAt, UpdatedAt
-            FROM Employees
-            WHERE UserID = ? AND DeletedAt IS NULL
+                MaNhanVien, MaNguoiDung, HoTen, NgaySinh, SoDienThoai, Email,
+                PhongBan, ChucVu, MucLuong, NgayVaoLam, MaQuanLy, TrangThai,
+                NgayTao, NgayCapNhat
+            FROM NhanVien
+            WHERE MaNguoiDung = ? AND NgayXoa IS NULL
         """, (user_id,))
         
         row = cursor.fetchone()
@@ -1425,7 +1463,7 @@ sqlcmd -S localhost -U SA -P "YourPassword" -i sample_data.sql
 ```
 
 ### 8.4. Cấu hình kết nối
-File: `bank_app_final_COMPLETE.py` (dòng 50)
+File: `bank_app_final.py` (dòng 50)
 ```python
 self.connection_string = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
@@ -1448,29 +1486,29 @@ python bank_app_final.py
 
 ### 9.1. Đăng nhập Credit Officer
 ```
-Username: officer1
-Password: officer1
+TenDangNhap: officer1
+MatKhau: officer1
 Chọn vai trò: Nhân viên tín dụng
 ```
 
 **Chức năng:**
 1. Xem Dashboard → Thống kê + Biểu đồ
 2. Tạo hồ sơ vay → Chọn KH, SP, nhập số tiền
-3. Thẩm định → Chọn hồ sơ Pending → Bắt đầu
-4. Phê duyệt → Chọn hồ sơ UnderReview → Phê duyệt
-5. Giải ngân → Chọn hồ sơ Approved → Giải ngân
+3. Thẩm định → Chọn hồ sơ ChoXuLy → Bắt đầu
+4. Phê duyệt → Chọn hồ sơ DangThamDinh → Phê duyệt
+5. Giải ngân → Chọn hồ sơ DaDuyet → Giải ngân
 6. Từ chối → Chọn hồ sơ → Nhập lý do
 
 ### 9.2. Đăng nhập Manager - User
 ```
-Username: manager1
-Password: manager1
+TenDangNhap: manager1
+MatKhau: manager1
 Chọn vai trò: Manager - Quản lý người dùng
 ```
 
 **Chức năng:**
 1. Xem danh sách nhân viên
-2. Thêm nhân viên → Điền form (có Position, Salary)
+2. Thêm nhân viên → Điền form (có ChucVu, MucLuong)
 3. Tìm kiếm → Nhập từ khóa
 4. Xem chi tiết → Chọn nhân viên → Chi tiết
 5. Chỉnh sửa → Chọn → Sửa thông tin
@@ -1479,15 +1517,15 @@ Chọn vai trò: Manager - Quản lý người dùng
 
 ### 9.3. Đăng nhập Manager - System
 ```
-Username: manager1
-Password: manager1
+TenDangNhap: manager1
+MatKhau: manager1
 Chọn vai trò: Manager - Quản lý hệ thống ngoài
 ```
 
 **Chức năng:**
 1. Xem danh sách đối tác
 2. Thêm đối tác → Nhập thông tin
-3. Cập nhật trạng thái → Chọn Active/Inactive/Maintenance
+3. Cập nhật trạng thái → Chọn KichHoat/KhongKichHoat/BaoTri
 4. Xóa đối tác
 5. Export PDF
 
@@ -1570,7 +1608,7 @@ def add_employee(self, user_id: int, full_name: str,
 
 ✅ **Advanced Validation:**
 - Email format check
-- Salary > 0
+- MucLuong > 0
 - State transition validation
 
 ---
@@ -1581,11 +1619,10 @@ def add_employee(self, user_id: int, full_name: str,
 - Dashboard với Pie Chart + Bar Chart
 - Dialog tạo hồ sơ vay
 - Danh sách hồ sơ theo trạng thái
-- Workflow từ Pending → Disbursed
-
+- Workflow từ ChoXuLy → DaGiaiNgan
 
 ### 11.2. Manager User
-- Danh sách nhân viên (có Position + Salary)
+- Danh sách nhân viên (có ChucVu + MucLuong)
 - Dialog thêm nhân viên
 - Dialog chỉnh sửa
 - PDF export sample
@@ -1659,8 +1696,8 @@ def add_employee(self, user_id: int, full_name: str,
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 05/01/2026  
+**Document Version:** 2.0  
+**Last Updated:** 06/01/2026  
 **Status:** Completed & Submitted
 
 ---

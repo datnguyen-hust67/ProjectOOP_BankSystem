@@ -57,19 +57,19 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT E.EmployeeID, E.UserID, E.FullName, E.DateOfBirth, E.Phone, E.Email,
-                   E.Department, E.Position, E.Salary, E.HireDate, E.ManagerID, E.Status,
-                   E.CreatedAt, E.UpdatedAt, E.DeletedAt, E.Address, E.IdentityNumber, E.Hometown,
-                   U.Username, R.RoleName
-            FROM Employees E
-            INNER JOIN Users U ON E.UserID = U.UserID
-            INNER JOIN Roles R ON U.RoleID = R.RoleID
+            SELECT NV.MaNhanVien, NV.MaNguoiDung, NV.HoTen, NV.NgaySinh, NV.SoDienThoai, NV.Email,
+                   NV.PhongBan, NV.ChucVu, NV.MucLuong, NV.NgayVaoLam, NV.MaQuanLy, NV.TrangThai,
+                   NV.NgayTao, NV.NgayCapNhat, NV.NgayXoa, NV.DiaChi, NV.SoCMND, NV.QueQuan,
+                   ND.TenDangNhap, VT.TenVaiTro
+            FROM NhanVien NV
+            INNER JOIN NguoiDung ND ON NV.MaNguoiDung = ND.MaNguoiDung
+            INNER JOIN VaiTro VT ON ND.MaVaiTro = VT.MaVaiTro
         """
         
         if not include_deleted:
-            query += " WHERE E.DeletedAt IS NULL"
+            query += " WHERE NV.NgayXoa IS NULL"
         
-        query += " ORDER BY E.FullName"
+        query += " ORDER BY NV.HoTen"
         
         cursor.execute(query)
         employees = [self._row_to_employee(row) for row in cursor.fetchall()]
@@ -89,21 +89,21 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         # Get total count
-        cursor.execute("SELECT COUNT(*) FROM Employees WHERE DeletedAt IS NULL")
+        cursor.execute("SELECT COUNT(*) FROM NhanVien WHERE NgayXoa IS NULL")
         total_count = cursor.fetchone()[0]
         
         # Get paginated data
         offset = (page - 1) * page_size
         query = """
-            SELECT E.EmployeeID, E.UserID, E.FullName, E.DateOfBirth, E.Phone, E.Email,
-                   E.Department, E.Position, E.Salary, E.HireDate, E.ManagerID, E.Status,
-                   E.CreatedAt, E.UpdatedAt, E.DeletedAt, E.Address, E.IdentityNumber, E.Hometown,
-                   U.Username, R.RoleName
-            FROM Employees E
-            INNER JOIN Users U ON E.UserID = U.UserID
-            INNER JOIN Roles R ON U.RoleID = R.RoleID
-            WHERE E.DeletedAt IS NULL
-            ORDER BY E.FullName
+            SELECT NV.MaNhanVien, NV.MaNguoiDung, NV.HoTen, NV.NgaySinh, NV.SoDienThoai, NV.Email,
+                   NV.PhongBan, NV.ChucVu, NV.MucLuong, NV.NgayVaoLam, NV.MaQuanLy, NV.TrangThai,
+                   NV.NgayTao, NV.NgayCapNhat, NV.NgayXoa, NV.DiaChi, NV.SoCMND, NV.QueQuan,
+                   ND.TenDangNhap, VT.TenVaiTro
+            FROM NhanVien NV
+            INNER JOIN NguoiDung ND ON NV.MaNguoiDung = ND.MaNguoiDung
+            INNER JOIN VaiTro VT ON ND.MaVaiTro = VT.MaVaiTro
+            WHERE NV.NgayXoa IS NULL
+            ORDER BY NV.HoTen
             OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
         """
         
@@ -125,20 +125,20 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT E.EmployeeID, E.UserID, E.FullName, E.DateOfBirth, E.Phone, E.Email,
-                   E.Department, E.Position, E.Salary, E.HireDate, E.ManagerID, E.Status,
-                   E.CreatedAt, E.UpdatedAt, E.DeletedAt, E.Address, E.IdentityNumber, E.Hometown,
-                   U.Username, R.RoleName
-            FROM Employees E
-            INNER JOIN Users U ON E.UserID = U.UserID
-            INNER JOIN Roles R ON U.RoleID = R.RoleID
-            WHERE E.DeletedAt IS NULL
-              AND (E.FullName LIKE ? 
-                   OR E.Email LIKE ? 
-                   OR E.Phone LIKE ?
-                   OR E.Department LIKE ?
-                   OR E.Position LIKE ?)
-            ORDER BY E.FullName
+            SELECT NV.MaNhanVien, NV.MaNguoiDung, NV.HoTen, NV.NgaySinh, NV.SoDienThoai, NV.Email,
+                   NV.PhongBan, NV.ChucVu, NV.MucLuong, NV.NgayVaoLam, NV.MaQuanLy, NV.TrangThai,
+                   NV.NgayTao, NV.NgayCapNhat, NV.NgayXoa, NV.DiaChi, NV.SoCMND, NV.QueQuan,
+                   ND.TenDangNhap, VT.TenVaiTro
+            FROM NhanVien NV
+            INNER JOIN NguoiDung ND ON NV.MaNguoiDung = ND.MaNguoiDung
+            INNER JOIN VaiTro VT ON ND.MaVaiTro = VT.MaVaiTro
+            WHERE NV.NgayXoa IS NULL
+              AND (NV.HoTen LIKE ? 
+                   OR NV.Email LIKE ? 
+                   OR NV.SoDienThoai LIKE ?
+                   OR NV.PhongBan LIKE ?
+                   OR NV.ChucVu LIKE ?)
+            ORDER BY NV.HoTen
         """
         
         search_param = f'%{keyword}%'
@@ -160,14 +160,14 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT E.EmployeeID, E.UserID, E.FullName, E.DateOfBirth, E.Phone, E.Email,
-                   E.Department, E.Position, E.Salary, E.HireDate, E.ManagerID, E.Status,
-                   E.CreatedAt, E.UpdatedAt, E.DeletedAt, E.Address, E.IdentityNumber, E.Hometown,
-                   U.Username, R.RoleName
-            FROM Employees E
-            INNER JOIN Users U ON E.UserID = U.UserID
-            INNER JOIN Roles R ON U.RoleID = R.RoleID
-            WHERE E.EmployeeID = ? AND E.DeletedAt IS NULL
+            SELECT NV.MaNhanVien, NV.MaNguoiDung, NV.HoTen, NV.NgaySinh, NV.SoDienThoai, NV.Email,
+                   NV.PhongBan, NV.ChucVu, NV.MucLuong, NV.NgayVaoLam, NV.MaQuanLy, NV.TrangThai,
+                   NV.NgayTao, NV.NgayCapNhat, NV.NgayXoa, NV.DiaChi, NV.SoCMND, NV.QueQuan,
+                   ND.TenDangNhap, VT.TenVaiTro
+            FROM NhanVien NV
+            INNER JOIN NguoiDung ND ON NV.MaNguoiDung = ND.MaNguoiDung
+            INNER JOIN VaiTro VT ON ND.MaVaiTro = VT.MaVaiTro
+            WHERE NV.MaNhanVien = ? AND NV.NgayXoa IS NULL
         """
         
         cursor.execute(query, (employee_id,))
@@ -203,12 +203,12 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            INSERT INTO Employees (
-                UserID, FullName, Email, Phone, Department, Position, Salary,
-                DateOfBirth, Address, IdentityNumber, Hometown, ManagerID, 
-                Status, HireDate
+            INSERT INTO NhanVien (
+                MaNguoiDung, HoTen, Email, SoDienThoai, PhongBan, ChucVu, MucLuong,
+                NgaySinh, DiaChi, SoCMND, QueQuan, MaQuanLy, 
+                TrangThai, NgayVaoLam
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', CAST(GETDATE() AS DATE))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, N'KichHoat', CAST(GETDATE() AS DATE))
         """
         
         try:
@@ -259,46 +259,46 @@ class EmployeeRepository:
         params = []
         
         if full_name is not None:
-            updates.append("FullName = ?")
+            updates.append("HoTen = ?")
             params.append(full_name)
         if email is not None:
             updates.append("Email = ?")
             params.append(email)
         if phone is not None:
-            updates.append("Phone = ?")
+            updates.append("SoDienThoai = ?")
             params.append(phone)
         if department is not None:
-            updates.append("Department = ?")
+            updates.append("PhongBan = ?")
             params.append(department)
         if position is not None:
-            updates.append("Position = ?")
+            updates.append("ChucVu = ?")
             params.append(position)
         if salary is not None:
-            updates.append("Salary = ?")
+            updates.append("MucLuong = ?")
             params.append(salary)
         if date_of_birth is not None:
-            updates.append("DateOfBirth = ?")
+            updates.append("NgaySinh = ?")
             params.append(date_of_birth)
         if address is not None:
-            updates.append("Address = ?")
+            updates.append("DiaChi = ?")
             params.append(address)
         if identity_number is not None:
-            updates.append("IdentityNumber = ?")
+            updates.append("SoCMND = ?")
             params.append(identity_number)
         if hometown is not None:
-            updates.append("Hometown = ?")
+            updates.append("QueQuan = ?")
             params.append(hometown)
         if manager_id is not None:
-            updates.append("ManagerID = ?")
+            updates.append("MaQuanLy = ?")
             params.append(manager_id)
         
         if not updates:
             return False
         
-        updates.append("UpdatedAt = GETDATE()")
+        updates.append("NgayCapNhat = GETDATE()")
         params.append(employee_id)
         
-        query = f"UPDATE Employees SET {', '.join(updates)} WHERE EmployeeID = ?"
+        query = f"UPDATE NhanVien SET {', '.join(updates)} WHERE MaNhanVien = ?"
         
         try:
             cursor.execute(query, params)
@@ -322,7 +322,7 @@ class EmployeeRepository:
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        query = "UPDATE Users SET RoleID = ?, UpdatedAt = GETDATE() WHERE UserID = ?"
+        query = "UPDATE NguoiDung SET MaVaiTro = ?, NgayCapNhat = GETDATE() WHERE MaNguoiDung = ?"
         
         try:
             cursor.execute(query, (new_role_id, user_id))
@@ -347,16 +347,16 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE Employees 
-            SET Status = 'Locked', UpdatedAt = GETDATE()
-            WHERE EmployeeID = ?
+            UPDATE NhanVien 
+            SET TrangThai = N'BiKhoa', NgayCapNhat = GETDATE()
+            WHERE MaNhanVien = ?
         """
         
-        # Also update Users table
+        # Also update NguoiDung table
         query2 = """
-            UPDATE Users 
-            SET IsActive = 0, UpdatedAt = GETDATE()
-            WHERE UserID = (SELECT UserID FROM Employees WHERE EmployeeID = ?)
+            UPDATE NguoiDung 
+            SET KichHoat = 0, NgayCapNhat = GETDATE()
+            WHERE MaNguoiDung = (SELECT MaNguoiDung FROM NhanVien WHERE MaNhanVien = ?)
         """
         
         try:
@@ -380,15 +380,15 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE Employees 
-            SET Status = 'Active', UpdatedAt = GETDATE()
-            WHERE EmployeeID = ?
+            UPDATE NhanVien 
+            SET TrangThai = N'KichHoat', NgayCapNhat = GETDATE()
+            WHERE MaNhanVien = ?
         """
         
         query2 = """
-            UPDATE Users 
-            SET IsActive = 1, UpdatedAt = GETDATE()
-            WHERE UserID = (SELECT UserID FROM Employees WHERE EmployeeID = ?)
+            UPDATE NguoiDung 
+            SET KichHoat = 1, NgayCapNhat = GETDATE()
+            WHERE MaNguoiDung = (SELECT MaNguoiDung FROM NhanVien WHERE MaNhanVien = ?)
         """
         
         try:
@@ -411,9 +411,9 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE Employees 
-            SET Status = 'Inactive', DeletedAt = GETDATE(), UpdatedAt = GETDATE()
-            WHERE EmployeeID = ?
+            UPDATE NhanVien 
+            SET TrangThai = N'KhongKichHoat', NgayXoa = GETDATE(), NgayCapNhat = GETDATE()
+            WHERE MaNhanVien = ?
         """
         
         try:
@@ -436,10 +436,10 @@ class EmployeeRepository:
         cursor = conn.cursor()
         
         if status:
-            query = "SELECT COUNT(*) FROM Employees WHERE Status = ? AND DeletedAt IS NULL"
+            query = "SELECT COUNT(*) FROM NhanVien WHERE TrangThai = ? AND NgayXoa IS NULL"
             cursor.execute(query, (status,))
         else:
-            query = "SELECT COUNT(*) FROM Employees WHERE DeletedAt IS NULL"
+            query = "SELECT COUNT(*) FROM NhanVien WHERE NgayXoa IS NULL"
             cursor.execute(query)
         
         count = cursor.fetchone()[0]
@@ -451,7 +451,7 @@ class EmployeeRepository:
         conn = self._get_connection()
         cursor = conn.cursor()
         
-        query = "SELECT COUNT(*) FROM Employees WHERE Department = ? AND DeletedAt IS NULL"
+        query = "SELECT COUNT(*) FROM NhanVien WHERE PhongBan = ? AND NgayXoa IS NULL"
         cursor.execute(query, (department,))
         
         count = cursor.fetchone()[0]

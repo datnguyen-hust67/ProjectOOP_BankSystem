@@ -74,16 +74,16 @@ class CreditApplicationRepository:
         
         try:
             # Generate application number
-            cursor.execute("SELECT COUNT(*) FROM CreditApplications")
+            cursor.execute("SELECT COUNT(*) FROM HoSoVay")
             count = cursor.fetchone()[0]
             app_number = f"APP-{datetime.now().year}-{count + 1:06d}"
             
             query = """
-                INSERT INTO CreditApplications (
-                    ApplicationNumber, CustomerID, ProductID, RequestedAmount,
-                    RequestedTerm, Purpose, Status, AssignedOfficerID, ApplicationDate
+                INSERT INTO HoSoVay (
+                    SoHoSo, MaKhachHang, MaSanPham, SoTienYeuCau,
+                    KyHanYeuCau, MucDich, TrangThai, MaNhanVienPhuTrach, NgayNop
                 )
-                VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, GETDATE())
+                VALUES (?, ?, ?, ?, ?, ?, N'ChoXuLy', ?, GETDATE())
             """
             
             cursor.execute(query, (
@@ -115,12 +115,12 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE CreditApplications
-            SET Status = 'UnderReview', 
-                ReviewedBy = ?,
-                ReviewDate = GETDATE(),
-                UpdatedAt = GETDATE()
-            WHERE ApplicationID = ? AND Status = 'Pending'
+            UPDATE HoSoVay
+            SET TrangThai = N'DangThamDinh', 
+                NguoiThamDinh = ?,
+                NgayThamDinh = GETDATE(),
+                NgayCapNhat = GETDATE()
+            WHERE MaHoSo = ? AND TrangThai = N'ChoXuLy'
         """
         
         try:
@@ -146,13 +146,13 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE CreditApplications
-            SET Status = 'Approved',
-                ApprovedBy = ?,
-                ApprovalDate = GETDATE(),
-                Notes = ?,
-                UpdatedAt = GETDATE()
-            WHERE ApplicationID = ? AND Status = 'UnderReview'
+            UPDATE HoSoVay
+            SET TrangThai = N'DaDuyet',
+                NguoiPheDuyet = ?,
+                NgayPheDuyet = GETDATE(),
+                GhiChu = ?,
+                NgayCapNhat = GETDATE()
+            WHERE MaHoSo = ? AND TrangThai = N'DangThamDinh'
         """
         
         try:
@@ -178,13 +178,13 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE CreditApplications
-            SET Status = 'Rejected',
-                ApprovedBy = ?,
-                ApprovalDate = GETDATE(),
-                RejectionReason = ?,
-                UpdatedAt = GETDATE()
-            WHERE ApplicationID = ?
+            UPDATE HoSoVay
+            SET TrangThai = N'TuChoi',
+                NguoiPheDuyet = ?,
+                NgayPheDuyet = GETDATE(),
+                LyDoTuChoi = ?,
+                NgayCapNhat = GETDATE()
+            WHERE MaHoSo = ?
         """
         
         try:
@@ -210,11 +210,11 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            UPDATE CreditApplications
-            SET Status = 'Disbursed',
-                DisbursementDate = GETDATE(),
-                UpdatedAt = GETDATE()
-            WHERE ApplicationID = ? AND Status = 'Approved'
+            UPDATE HoSoVay
+            SET TrangThai = N'DaGiaiNgan',
+                NgayGiaiNgan = GETDATE(),
+                NgayCapNhat = GETDATE()
+            WHERE MaHoSo = ? AND TrangThai = N'DaDuyet'
         """
         
         try:
@@ -237,19 +237,19 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT CA.ApplicationID, CA.ApplicationNumber, CA.CustomerID, CA.ProductID,
-                   CA.RequestedAmount, CA.RequestedTerm, CA.Purpose, CA.Status,
-                   CA.AssignedOfficerID, CA.ReviewedBy, CA.ApprovedBy,
-                   CA.ApplicationDate, CA.ReviewDate, CA.ApprovalDate, CA.DisbursementDate,
-                   CA.Notes, CA.RejectionReason, CA.CreatedAt, CA.UpdatedAt,
-                   C.FullName, C.Phone, C.CreditScore,
-                   LP.ProductName,
-                   E.FullName
-            FROM CreditApplications CA
-            INNER JOIN Customers C ON CA.CustomerID = C.CustomerID
-            INNER JOIN LoanProducts LP ON CA.ProductID = LP.ProductID
-            LEFT JOIN Employees E ON CA.AssignedOfficerID = E.EmployeeID
-            WHERE CA.ApplicationID = ?
+            SELECT HS.MaHoSo, HS.SoHoSo, HS.MaKhachHang, HS.MaSanPham,
+                   HS.SoTienYeuCau, HS.KyHanYeuCau, HS.MucDich, HS.TrangThai,
+                   HS.MaNhanVienPhuTrach, HS.NguoiThamDinh, HS.NguoiPheDuyet,
+                   HS.NgayNop, HS.NgayThamDinh, HS.NgayPheDuyet, HS.NgayGiaiNgan,
+                   HS.GhiChu, HS.LyDoTuChoi, HS.NgayTao, HS.NgayCapNhat,
+                   KH.HoTen, KH.SoDienThoai, KH.DiemTinDung,
+                   SP.TenSanPham,
+                   NV.HoTen
+            FROM HoSoVay HS
+            INNER JOIN KhachHang KH ON HS.MaKhachHang = KH.MaKhachHang
+            INNER JOIN SanPhamVay SP ON HS.MaSanPham = SP.MaSanPham
+            LEFT JOIN NhanVien NV ON HS.MaNhanVienPhuTrach = NV.MaNhanVien
+            WHERE HS.MaHoSo = ?
         """
         
         cursor.execute(query, (application_id,))
@@ -265,20 +265,20 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT CA.ApplicationID, CA.ApplicationNumber, CA.CustomerID, CA.ProductID,
-                   CA.RequestedAmount, CA.RequestedTerm, CA.Purpose, CA.Status,
-                   CA.AssignedOfficerID, CA.ReviewedBy, CA.ApprovedBy,
-                   CA.ApplicationDate, CA.ReviewDate, CA.ApprovalDate, CA.DisbursementDate,
-                   CA.Notes, CA.RejectionReason, CA.CreatedAt, CA.UpdatedAt,
-                   C.FullName, C.Phone, C.CreditScore,
-                   LP.ProductName,
-                   E.FullName
-            FROM CreditApplications CA
-            INNER JOIN Customers C ON CA.CustomerID = C.CustomerID
-            INNER JOIN LoanProducts LP ON CA.ProductID = LP.ProductID
-            LEFT JOIN Employees E ON CA.AssignedOfficerID = E.EmployeeID
-            WHERE CA.Status = ?
-            ORDER BY CA.ApplicationDate DESC
+            SELECT HS.MaHoSo, HS.SoHoSo, HS.MaKhachHang, HS.MaSanPham,
+                   HS.SoTienYeuCau, HS.KyHanYeuCau, HS.MucDich, HS.TrangThai,
+                   HS.MaNhanVienPhuTrach, HS.NguoiThamDinh, HS.NguoiPheDuyet,
+                   HS.NgayNop, HS.NgayThamDinh, HS.NgayPheDuyet, HS.NgayGiaiNgan,
+                   HS.GhiChu, HS.LyDoTuChoi, HS.NgayTao, HS.NgayCapNhat,
+                   KH.HoTen, KH.SoDienThoai, KH.DiemTinDung,
+                   SP.TenSanPham,
+                   NV.HoTen
+            FROM HoSoVay HS
+            INNER JOIN KhachHang KH ON HS.MaKhachHang = KH.MaKhachHang
+            INNER JOIN SanPhamVay SP ON HS.MaSanPham = SP.MaSanPham
+            LEFT JOIN NhanVien NV ON HS.MaNhanVienPhuTrach = NV.MaNhanVien
+            WHERE HS.TrangThai = ?
+            ORDER BY HS.NgayNop DESC
         """
         
         cursor.execute(query, (status,))
@@ -293,20 +293,20 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT CA.ApplicationID, CA.ApplicationNumber, CA.CustomerID, CA.ProductID,
-                   CA.RequestedAmount, CA.RequestedTerm, CA.Purpose, CA.Status,
-                   CA.AssignedOfficerID, CA.ReviewedBy, CA.ApprovedBy,
-                   CA.ApplicationDate, CA.ReviewDate, CA.ApprovalDate, CA.DisbursementDate,
-                   CA.Notes, CA.RejectionReason, CA.CreatedAt, CA.UpdatedAt,
-                   C.FullName, C.Phone, C.CreditScore,
-                   LP.ProductName,
-                   E.FullName
-            FROM CreditApplications CA
-            INNER JOIN Customers C ON CA.CustomerID = C.CustomerID
-            INNER JOIN LoanProducts LP ON CA.ProductID = LP.ProductID
-            LEFT JOIN Employees E ON CA.AssignedOfficerID = E.EmployeeID
-            WHERE CA.AssignedOfficerID = ?
-            ORDER BY CA.ApplicationDate DESC
+            SELECT HS.MaHoSo, HS.SoHoSo, HS.MaKhachHang, HS.MaSanPham,
+                   HS.SoTienYeuCau, HS.KyHanYeuCau, HS.MucDich, HS.TrangThai,
+                   HS.MaNhanVienPhuTrach, HS.NguoiThamDinh, HS.NguoiPheDuyet,
+                   HS.NgayNop, HS.NgayThamDinh, HS.NgayPheDuyet, HS.NgayGiaiNgan,
+                   HS.GhiChu, HS.LyDoTuChoi, HS.NgayTao, HS.NgayCapNhat,
+                   KH.HoTen, KH.SoDienThoai, KH.DiemTinDung,
+                   SP.TenSanPham,
+                   NV.HoTen
+            FROM HoSoVay HS
+            INNER JOIN KhachHang KH ON HS.MaKhachHang = KH.MaKhachHang
+            INNER JOIN SanPhamVay SP ON HS.MaSanPham = SP.MaSanPham
+            LEFT JOIN NhanVien NV ON HS.MaNhanVienPhuTrach = NV.MaNhanVien
+            WHERE HS.MaNhanVienPhuTrach = ?
+            ORDER BY HS.NgayNop DESC
         """
         
         cursor.execute(query, (officer_id,))
@@ -321,19 +321,19 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         query = """
-            SELECT CA.ApplicationID, CA.ApplicationNumber, CA.CustomerID, CA.ProductID,
-                   CA.RequestedAmount, CA.RequestedTerm, CA.Purpose, CA.Status,
-                   CA.AssignedOfficerID, CA.ReviewedBy, CA.ApprovedBy,
-                   CA.ApplicationDate, CA.ReviewDate, CA.ApprovalDate, CA.DisbursementDate,
-                   CA.Notes, CA.RejectionReason, CA.CreatedAt, CA.UpdatedAt,
-                   C.FullName, C.Phone, C.CreditScore,
-                   LP.ProductName,
-                   E.FullName
-            FROM CreditApplications CA
-            INNER JOIN Customers C ON CA.CustomerID = C.CustomerID
-            INNER JOIN LoanProducts LP ON CA.ProductID = LP.ProductID
-            LEFT JOIN Employees E ON CA.AssignedOfficerID = E.EmployeeID
-            ORDER BY CA.ApplicationDate DESC
+            SELECT HS.MaHoSo, HS.SoHoSo, HS.MaKhachHang, HS.MaSanPham,
+                   HS.SoTienYeuCau, HS.KyHanYeuCau, HS.MucDich, HS.TrangThai,
+                   HS.MaNhanVienPhuTrach, HS.NguoiThamDinh, HS.NguoiPheDuyet,
+                   HS.NgayNop, HS.NgayThamDinh, HS.NgayPheDuyet, HS.NgayGiaiNgan,
+                   HS.GhiChu, HS.LyDoTuChoi, HS.NgayTao, HS.NgayCapNhat,
+                   KH.HoTen, KH.SoDienThoai, KH.DiemTinDung,
+                   SP.TenSanPham,
+                   NV.HoTen
+            FROM HoSoVay HS
+            INNER JOIN KhachHang KH ON HS.MaKhachHang = KH.MaKhachHang
+            INNER JOIN SanPhamVay SP ON HS.MaSanPham = SP.MaSanPham
+            LEFT JOIN NhanVien NV ON HS.MaNhanVienPhuTrach = NV.MaNhanVien
+            ORDER BY HS.NgayNop DESC
         """
         
         cursor.execute(query)
@@ -348,10 +348,10 @@ class CreditApplicationRepository:
         cursor = conn.cursor()
         
         if status:
-            query = "SELECT COUNT(*) FROM CreditApplications WHERE Status = ?"
+            query = "SELECT COUNT(*) FROM HoSoVay WHERE TrangThai = ?"
             cursor.execute(query, (status,))
         else:
-            query = "SELECT COUNT(*) FROM CreditApplications"
+            query = "SELECT COUNT(*) FROM HoSoVay"
             cursor.execute(query)
         
         count = cursor.fetchone()[0]
